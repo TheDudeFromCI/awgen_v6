@@ -1,0 +1,9 @@
+[package]
+name = "awgen_editor"
+description = "The Awgen Game Engine editor."
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bevy = "0.15"
+bevy_framepace = "0.18"
