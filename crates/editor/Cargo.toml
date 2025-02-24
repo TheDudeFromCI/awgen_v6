@@ -6,4 +6,6 @@ edition = "2021"
 
 [dependencies]
 bevy = "0.15"
+bevy_egui = "0.33"
 bevy_framepace = "0.18"
+tinyfiledialogs = "3.9.1"
