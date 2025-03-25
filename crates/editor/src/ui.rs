@@ -5,7 +5,7 @@ use bevy::prelude::*;
 use bevy_egui::{EguiContexts, egui};
 
 use crate::file_picker::{FilePickerDialog, FileSelectionResult};
-use crate::project::ProjectSettings;
+use crate::project::{ProjectActionEvent, ProjectSettings};
 
 /// This plugin provides the base user interface for the editor.
 pub struct EditorUiPlugin;
@@ -47,6 +47,7 @@ enum FileSelectionOperation {
 fn layout(
     mut file_picker: Local<Option<(FilePickerDialog, FileSelectionOperation)>>,
     mut app_exit: EventWriter<AppExit>,
+    mut project_action_evs: EventWriter<ProjectActionEvent>,
     mut occupied_screen_space: ResMut<OccupiedScreenSpace>,
     mut contexts: EguiContexts,
     project_settings: Option<Res<ProjectSettings>>,
@@ -56,6 +57,7 @@ fn layout(
     let mut is_picking_file = false;
     let is_project_open = project_settings.is_some();
 
+    // Handle file selection
     if let Some((file_dialog, file_op)) = file_picker.as_mut() {
         if file_dialog.is_open() {
             is_picking_file = true;
@@ -66,6 +68,7 @@ fn layout(
                 FileSelectionOperation::NewProject => match result {
                     FileSelectionResult::Path(path) => {
                         info!("Creating new project at: {}", path);
+                        project_action_evs.send(ProjectActionEvent::New(path.clone()));
                     }
                     FileSelectionResult::Canceled => {
                         debug!("New project creation canceled.");
@@ -74,6 +77,7 @@ fn layout(
                 FileSelectionOperation::OpenProject => match result {
                     FileSelectionResult::Path(path) => {
                         info!("Opening project at: {}", path);
+                        project_action_evs.send(ProjectActionEvent::Open(path.clone()));
                     }
                     FileSelectionResult::Canceled => {
                         debug!("Project open canceled.");
@@ -85,6 +89,7 @@ fn layout(
         }
     }
 
+    // Render toolbar
     occupied_screen_space.left = egui::TopBottomPanel::top("toolbar")
         .resizable(false)
         .show(ctx, |ui| {
@@ -124,6 +129,7 @@ fn layout(
                         if ui.button("Close Project").clicked() {
                             debug!("Closing project file.");
                             ui.close_menu();
+                            project_action_evs.send(ProjectActionEvent::Close);
                         }
                     });
 
@@ -143,7 +149,6 @@ fn layout(
                     if ui.button("Exit").clicked() {
                         info!("Exiting application.");
                         ui.close_menu();
-
                         app_exit.send(AppExit::Success);
                     }
                 });
