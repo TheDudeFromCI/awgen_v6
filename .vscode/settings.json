@@ -13,6 +13,7 @@
     "Awgen",
     "Egui",
     "Framepace",
+    "rustyscript",
     "tinyfiledialogs"
   ]
 }

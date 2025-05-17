@@ -1,7 +1,9 @@
-#![doc = include_str!("../README.md")]
+#![doc = include_str!("../../../README.md")]
 #![warn(missing_docs)]
 #![warn(clippy::missing_docs_in_private_items)]
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
+use std::path::PathBuf;
 
 use bevy::log::LogPlugin;
 use bevy::prelude::*;
@@ -10,8 +12,10 @@ use bevy::winit::WinitSettings;
 use bevy_egui::EguiPlugin;
 use bevy_framepace::{FramepacePlugin, FramepaceSettings, Limiter};
 
+mod awgen_ext;
 mod file_picker;
 mod project;
+mod scripts;
 mod ui;
 
 /// The title of the window in the title bar.
@@ -76,7 +80,13 @@ fn main() -> AppExit {
                 }),
         )
         .add_plugins((FramepacePlugin, EguiPlugin))
-        .add_plugins((ui::EditorUiPlugin, project::ProjectPlugin))
+        .add_plugins((
+            ui::EditorUiPlugin,
+            project::ProjectPlugin,
+            scripts::ScriptsPlugin {
+                script_folder: PathBuf::from("scripts/editor"),
+            },
+        ))
         .add_systems(Startup, camera)
         .add_systems(Update, window_framerate)
         .run()
