@@ -4,7 +4,6 @@
 use std::future::Future;
 use std::time::Duration;
 
-use bevy::prelude::*;
 use rustyscript::deno_core::{extension, op2};
 use smol::Timer;
 
@@ -12,13 +11,13 @@ extension!(
     awgen,
     ops = [op_log, op_sleep_async],
     esm_entry_point = "awgen:core",
-    esm = [ dir "js", "awgen:core" = "awgen_core.js"],
+    esm = [ dir "src/scripts/js", "awgen:core" = "awgen_core.js"],
 );
 
 /// A simple logging operation that logs a message to the console.
 #[op2(fast)]
 fn op_log(#[string] message: String) {
-    info!("SCRIPT: {}", message);
+    println!("SCRIPT: {}", message);
 }
 
 /// A simple operation that sleeps for a given number of milliseconds.

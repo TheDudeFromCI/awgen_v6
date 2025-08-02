@@ -10,6 +10,12 @@ declare global {
    * @param ms - The number of milliseconds to sleep.
    */
   function sleep(ms: number): Promise<void>;
+
+  /**
+   * Fetches the next packet from the client.
+   * @returns A promise that resolves with the packet data.
+   */
+  function fetchPacket(): Promise<any>;
 }
 
 export {};
