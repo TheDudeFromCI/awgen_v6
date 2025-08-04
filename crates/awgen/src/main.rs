@@ -8,6 +8,8 @@ use std::path::PathBuf;
 use bevy::prelude::*;
 use clap::Parser;
 
+use crate::scripts::{PacketIn, PacketOut};
+
 pub mod app;
 pub mod scripts;
 
@@ -32,5 +34,28 @@ fn main() -> AppExit {
         }
     };
 
-    app::run(sockets)
+    if let Err(err) = sockets.send(PacketOut::Init {
+        project_folder: args.project.display().to_string(),
+    }) {
+        eprintln!(
+            "Failed to send initialization packet to script engine: {}",
+            err
+        );
+        return AppExit::from_code(1);
+    }
+
+    let Ok(PacketIn::Init { name, version }) = sockets.recv_blocking() else {
+        eprintln!("Script Engine failed to properly initialize the game.");
+        return AppExit::from_code(1);
+    };
+
+    let settings = app::GameInitSettings {
+        name,
+        version,
+        debug: cfg!(debug_assertions),
+        vsync: true,
+        fullscreen: false,
+    };
+
+    app::run(settings, sockets)
 }

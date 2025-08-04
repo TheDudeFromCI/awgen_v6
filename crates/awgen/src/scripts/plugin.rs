@@ -64,6 +64,11 @@ fn recv(sockets: Res<ScriptEngine>, mut handler: PacketHandler) {
 /// Handles a single packet from the script engine.
 fn handle(packet: PacketIn, handler: &mut PacketHandler) {
     match packet {
+        PacketIn::Init { .. } => {
+            warn!(
+                "Received init packet, but this should only be sent by the script engine on startup."
+            );
+        }
         PacketIn::Set { packets } => {
             debug!("Received set packet with {} items.", packets.len());
             for packet in packets {

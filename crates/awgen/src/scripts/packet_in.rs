@@ -10,8 +10,20 @@ use serde::{Deserialize, Serialize};
 /// The `PacketIn` enum, which is used to represent different types of
 /// incoming packets that may be received from the script engine.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "type", rename_all = "camelCase")]
+#[serde(tag = "type", rename_all = "camelCase", deny_unknown_fields)]
 pub enum PacketIn {
+    /// A packet that contains the initial game state settings, which is sent
+    /// when the script engine starts up. This packet must always be the first
+    /// packet sent by the script engine. Subsequent packets of this type are
+    /// ignored.
+    Init {
+        /// The name of the game.
+        name: String,
+
+        /// The game version -- a tuple of (major, minor, patch).
+        version: (u32, u32, u32),
+    },
+
     /// A packet that contains a collection of packets from the
     /// script engine that should be processed on the same frame.
     Set {

@@ -2,57 +2,61 @@
 
 use bevy::log::LogPlugin;
 use bevy::prelude::*;
-use bevy::window::{PresentMode, WindowFocused, WindowMode};
+use bevy::window::{PresentMode, WindowMode};
 use bevy::winit::WinitSettings;
-use bevy_framepace::{FramepacePlugin, FramepaceSettings, Limiter};
 
 use crate::scripts::{ScriptEnginePlugin, ScriptSockets};
 
-/// The title of the window in the title bar.
-pub const WINDOW_TITLE: &str = "Awgen Game Engine";
+/// Settings for initializing the game.
+#[derive(Debug)]
+pub struct GameInitSettings {
+    /// The name of the game.
+    pub name: String,
 
-/// The name of the window, visible to the operating system.
-pub const WINDOW_NAME: &str = "Awgen Game Engine";
+    /// The version of the game, represented as a tuple of (major, minor,
+    /// patch).
+    pub version: (u32, u32, u32),
 
-/// The window mode on startup.
-pub const WINDOW_MODE: WindowMode = WindowMode::Windowed;
+    /// Whether or not to launch the game in debug mode.
+    pub debug: bool,
 
-/// Whether or not to enable vsync.
-pub const VSYNC: bool = true;
+    /// Whether or not to enable vsync.
+    pub vsync: bool,
 
-/// Whether or not to enable debug mode. If true, the editor will run in debug
-/// mode, which enables additional features and logging.
-pub const DEBUG: bool = true;
-
-/// Whether or not to limit the framerate when the window is focused. If true,
-/// the framerate will match the monitor refresh rate. If false, the framerate
-/// will be unlimited.
-pub const FRAME_LIMITER_FOCUSED: bool = true;
-
-/// The framerate limit, in frames per second, when the window is unfocused. If
-/// `None`, the framerate will be unlimited.
-pub const FRAME_LIMITER_UNFOCUSED: Option<u32> = Some(5);
+    /// Whether or not to launch the game in fullscreen mode.
+    pub fullscreen: bool,
+}
 
 /// Launch a new game window with the Bevy framework, setting up the
 /// necessary plugins and resources.
-pub fn run(sockets: ScriptSockets) -> AppExit {
+pub fn run(settings: GameInitSettings, sockets: ScriptSockets) -> AppExit {
     let window_title = format!(
-        "{} {}{}",
-        WINDOW_TITLE,
-        env!("CARGO_PKG_VERSION"),
-        if DEBUG { " (Debug)" } else { "" }
+        "{} - {}.{}.{}{}",
+        settings.name,
+        settings.version.0,
+        settings.version.1,
+        settings.version.2,
+        if settings.debug { " (Debug)" } else { "" }
     );
 
-    let present_mode = if VSYNC {
+    let window_name = Some(settings.name.clone());
+
+    let present_mode = if settings.vsync {
         PresentMode::Fifo
     } else {
         PresentMode::Immediate
     };
 
-    let debug_level = if DEBUG {
+    let debug_level = if settings.debug {
         bevy::log::Level::DEBUG
     } else {
         bevy::log::Level::INFO
+    };
+
+    let window_mode = if settings.fullscreen {
+        WindowMode::Fullscreen(MonitorSelection::Primary)
+    } else {
+        WindowMode::Windowed
     };
 
     App::new()
@@ -63,8 +67,8 @@ pub fn run(sockets: ScriptSockets) -> AppExit {
                 .set(WindowPlugin {
                     primary_window: Some(Window {
                         title: window_title,
-                        name: Some(WINDOW_NAME.to_string()),
-                        mode: WINDOW_MODE,
+                        name: window_name,
+                        mode: window_mode,
                         present_mode,
                         ..default()
                     }),
@@ -76,9 +80,8 @@ pub fn run(sockets: ScriptSockets) -> AppExit {
                     ..default()
                 }),
         )
-        .add_plugins((FramepacePlugin, ScriptEnginePlugin::new(sockets)))
+        .add_plugins(ScriptEnginePlugin::new(sockets))
         .add_systems(Startup, camera)
-        .add_systems(Update, window_framerate)
         .run()
 }
 
@@ -108,29 +111,4 @@ fn camera(
     let camera_pos = Vec3::new(-2.0, 2.5, 5.0);
     let camera_transform = Transform::from_translation(camera_pos).looking_at(Vec3::ZERO, Vec3::Y);
     commands.spawn((Camera3d::default(), camera_transform));
-}
-
-/// A simple system that adjusts the framerate limit based on whether the window
-/// is focused or unfocused.
-fn window_framerate(
-    mut settings: ResMut<FramepaceSettings>,
-    mut window_focused: EventReader<WindowFocused>,
-) {
-    for ev in window_focused.read() {
-        if ev.focused {
-            if FRAME_LIMITER_FOCUSED {
-                settings.limiter = Limiter::Auto;
-                debug!("Window focused (Setting limiter to Auto).");
-            } else {
-                settings.limiter = Limiter::Off;
-                debug!("Window focused (Setting limiter to Off).");
-            }
-        } else if let Some(framerate) = FRAME_LIMITER_UNFOCUSED {
-            settings.limiter = Limiter::from_framerate(framerate as f64);
-            debug!("Window unfocused (Setting limiter to {framerate} fps).");
-        } else {
-            settings.limiter = Limiter::Off;
-            debug!("Window unfocused (Setting limiter to Off).");
-        }
-    }
 }

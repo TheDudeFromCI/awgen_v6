@@ -202,6 +202,16 @@ impl ScriptSockets {
         }
     }
 
+    /// Receives a packet from the script engine, blocking until a packet is
+    /// available or the socket is closed.
+    ///
+    /// Returns the received packet or an error if the socket is closed.
+    pub fn recv_blocking(&self) -> Result<PacketIn, ScriptEngineError> {
+        self.incoming
+            .recv_blocking()
+            .map_err(|_| ScriptEngineError::SocketClosed)
+    }
+
     /// Sends a shutdown request to the script engine, if the socket is open.
     pub fn shutdown(&self) {
         let _ = self.send(PacketOut::Shutdown);
