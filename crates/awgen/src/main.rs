@@ -8,8 +8,6 @@ use std::path::PathBuf;
 use bevy::prelude::*;
 use clap::Parser;
 
-use crate::scripts::PacketOut;
-
 pub mod app;
 pub mod scripts;
 
@@ -34,18 +32,5 @@ fn main() -> AppExit {
         }
     };
 
-    for i in 0 .. 3 {
-        sockets.send(PacketOut::Count { value: i }).unwrap();
-    }
-
-    // let app_out = app::run();
-    let app_out = AppExit::Success;
-
-    sockets.shutdown();
-    if let Err(err) = sockets.join() {
-        eprintln!("Script engine thread panicked: {}", err);
-        return AppExit::from_code(1);
-    }
-
-    app_out
+    app::run(sockets)
 }

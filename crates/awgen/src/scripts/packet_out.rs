@@ -13,7 +13,4 @@ use serde::{Deserialize, Serialize};
 pub enum PacketOut {
     /// A packet to request the script engine to shut down.
     Shutdown,
-
-    /// Count
-    Count { value: u32 },
 }

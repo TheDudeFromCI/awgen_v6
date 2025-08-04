@@ -6,6 +6,8 @@ use bevy::window::{PresentMode, WindowFocused, WindowMode};
 use bevy::winit::WinitSettings;
 use bevy_framepace::{FramepacePlugin, FramepaceSettings, Limiter};
 
+use crate::scripts::{ScriptEnginePlugin, ScriptSockets};
+
 /// The title of the window in the title bar.
 pub const WINDOW_TITLE: &str = "Awgen Game Engine";
 
@@ -33,7 +35,26 @@ pub const FRAME_LIMITER_UNFOCUSED: Option<u32> = Some(5);
 
 /// Launch a new game window with the Bevy framework, setting up the
 /// necessary plugins and resources.
-pub fn run() -> AppExit {
+pub fn run(sockets: ScriptSockets) -> AppExit {
+    let window_title = format!(
+        "{} {}{}",
+        WINDOW_TITLE,
+        env!("CARGO_PKG_VERSION"),
+        if DEBUG { " (Debug)" } else { "" }
+    );
+
+    let present_mode = if VSYNC {
+        PresentMode::Fifo
+    } else {
+        PresentMode::Immediate
+    };
+
+    let debug_level = if DEBUG {
+        bevy::log::Level::DEBUG
+    } else {
+        bevy::log::Level::INFO
+    };
+
     App::new()
         .insert_resource(ClearColor(Color::BLACK))
         .insert_resource(WinitSettings::game())
@@ -41,34 +62,21 @@ pub fn run() -> AppExit {
             DefaultPlugins
                 .set(WindowPlugin {
                     primary_window: Some(Window {
-                        title: format!(
-                            "{} {}{}",
-                            WINDOW_TITLE,
-                            env!("CARGO_PKG_VERSION"),
-                            if DEBUG { " (Debug)" } else { "" }
-                        ),
+                        title: window_title,
                         name: Some(WINDOW_NAME.to_string()),
                         mode: WINDOW_MODE,
-                        present_mode: if VSYNC {
-                            PresentMode::Fifo
-                        } else {
-                            PresentMode::Immediate
-                        },
+                        present_mode,
                         ..default()
                     }),
                     ..default()
                 })
                 .set(LogPlugin {
-                    level: if DEBUG {
-                        bevy::log::Level::DEBUG
-                    } else {
-                        bevy::log::Level::INFO
-                    },
+                    level: debug_level,
                     filter: "wgpu=error,naga=warn,calloop=debug,polling=debug".to_string(),
                     ..default()
                 }),
         )
-        .add_plugins(FramepacePlugin)
+        .add_plugins((FramepacePlugin, ScriptEnginePlugin::new(sockets)))
         .add_systems(Startup, camera)
         .add_systems(Update, window_framerate)
         .run()

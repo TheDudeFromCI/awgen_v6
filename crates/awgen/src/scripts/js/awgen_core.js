@@ -6,3 +6,6 @@ globalThis.sleep = sleep;
 
 export const fetchPacket = () => rustyscript.async_functions['fetchPacket']();
 globalThis.fetchPacket = fetchPacket;
+
+export const sendPackets = (...packets) => rustyscript.functions['sendPackets'](...packets);
+globalThis.sendPackets = sendPackets;

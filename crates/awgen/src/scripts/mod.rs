@@ -6,15 +6,18 @@ use std::pin::Pin;
 use std::sync::Arc;
 use std::thread::JoinHandle;
 
+use bevy::log::debug;
 use rustyscript::{Module, ModuleHandle, Runtime, RuntimeOptions, Undefined, json_args};
-use smol::channel::{Receiver, Sender};
+use smol::channel::{Receiver, Sender, TryRecvError};
 
 mod awgen_ext;
 mod packet_in;
 mod packet_out;
+mod plugin;
 
 pub use packet_in::PacketIn;
 pub use packet_out::PacketOut;
+pub use plugin::ScriptEnginePlugin;
 
 /// Spawns a new thread to run the script engine.
 pub fn start_script_engine(project_folder: &Path) -> Result<ScriptSockets, ScriptEngineError> {
@@ -95,6 +98,23 @@ fn prepare_script_engine(
         },
     )?;
 
+    runtime.register_function(
+        "sendPackets",
+        move |args: &[serde_json::Value]| -> Result<serde_json::Value, rustyscript::Error> {
+            debug!("Sending packets to client: {:?}", args);
+            for arg in args {
+                let packet = serde_json::from_value::<PacketIn>(arg.clone()).map_err(|e| {
+                    rustyscript::Error::Runtime(format!("Failed to parse packet: {e}"))
+                })?;
+                send_to_client.send_blocking(packet).map_err(|_| {
+                    rustyscript::Error::Runtime("Failed to send packet".to_string())
+                })?;
+            }
+
+            Ok(serde_json::Value::Null)
+        },
+    )?;
+
     let mod_ref = modules.iter().collect::<Vec<_>>();
     let mod_handle = runtime.load_modules(&index, mod_ref)?;
     runtime.set_current_dir(folder)?;
@@ -125,10 +145,9 @@ pub enum ScriptEngineError {
 }
 
 /// A container for the sockets between Bevy and the script engine.
-#[derive()]
 pub struct ScriptSockets {
     /// The thread handle for the script engine.
-    thread: JoinHandle<Result<(), ScriptEngineError>>,
+    thread: Option<JoinHandle<Result<(), ScriptEngineError>>>,
 
     /// The outgoing packets that can be sent to the script engine.
     outgoing: Sender<PacketOut>,
@@ -145,15 +164,21 @@ impl ScriptSockets {
         incoming: Receiver<PacketIn>,
     ) -> Self {
         Self {
-            thread,
+            thread: Some(thread),
             outgoing,
             incoming,
         }
     }
 
     /// Joins the script engine thread, waiting for it to finish execution.
-    pub fn join(self) -> Result<(), ScriptEngineError> {
-        self.thread.join().map_err(ScriptEngineError::Crash)?
+    /// Calling this method will drop the thread handle, so it should only be
+    /// called once.
+    pub fn join(&mut self) -> Result<(), ScriptEngineError> {
+        if let Some(thread) = self.thread.take() {
+            return thread.join().map_err(ScriptEngineError::Crash)?;
+        }
+
+        Ok(())
     }
 
     /// Sends a packet to the script engine.
@@ -163,6 +188,18 @@ impl ScriptSockets {
         self.outgoing
             .send_blocking(packet)
             .map_err(|_| ScriptEngineError::SocketClosed)
+    }
+
+    /// Receives a packet from the script engine, if available.
+    ///
+    /// Returns `Ok(None)` if no packet is available, or an error if the socket
+    /// is closed.
+    pub fn recv(&self) -> Result<Option<PacketIn>, ScriptEngineError> {
+        match self.incoming.try_recv() {
+            Ok(packet) => Ok(Some(packet)),
+            Err(TryRecvError::Empty) => Ok(None),
+            Err(TryRecvError::Closed) => Err(ScriptEngineError::SocketClosed),
+        }
     }
 
     /// Sends a shutdown request to the script engine, if the socket is open.
