@@ -10,7 +10,7 @@ use bevy::prelude::*;
 use clap::Parser;
 
 use crate::database::Database;
-use crate::scripts::{PacketIn, PacketOut};
+use crate::scripts::PacketIn;
 
 mod app;
 mod database;
@@ -41,19 +41,6 @@ fn main() -> AppExit {
             return AppExit::from_code(1);
         }
     };
-
-    if let Err(err) = sockets.send(PacketOut::Init {
-        project_folder: args.project.display().to_string(),
-    }) {
-        eprintln!(
-            "Failed to send initialization packet to script engine: {}",
-            err
-        );
-        if let Err(err2) = sockets.shutdown_blocking() {
-            eprintln!("The script engine has crashed: {}", err2);
-        }
-        return AppExit::from_code(1);
-    }
 
     let init_packet = match sockets.recv_blocking() {
         Ok(packet) => packet,
