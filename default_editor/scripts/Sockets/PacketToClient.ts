@@ -15,7 +15,7 @@ export class Init {
   /**
    * The name of the game.
    */
-  readonly name: string;
+  name: string;
 
   /**
    * The version of the game engine. This should be an array of three numbers
@@ -23,16 +23,15 @@ export class Init {
    *
    * For example, [1, 0, 0] represents version 1.0.0.
    */
-  readonly version: [number, number, number];
+  version: string;
 
   /**
    * Creates a new initialization packet.
    *
    * @param name The name of the game.
-   * @param version The version of the game engine, represented as an array
-   *                of three numbers: [major, minor, patch].
+   * @param version The version of the game engine.
    */
-  constructor(name: string, version: [number, number, number]) {
+  constructor(name: string, version: string) {
     this.name = name;
     this.version = version;
   }
@@ -56,7 +55,7 @@ export class Set {
    * This can include multiple packets, such as those containing text, images,
    * or other data.
    */
-  readonly packets: PacketToClient[];
+  packets: PacketToClient[];
 
   /**
    * Creates a new set packet.

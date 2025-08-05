@@ -4,14 +4,17 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use bevy::prelude::*;
 use clap::Parser;
 
+use crate::database::Database;
 use crate::scripts::{PacketIn, PacketOut};
 
-pub mod app;
-pub mod scripts;
+mod app;
+mod database;
+mod scripts;
 
 /// The arguments for the command line interface.
 #[derive(Debug, Parser)]
@@ -26,7 +29,12 @@ struct Args {
 fn main() -> AppExit {
     let args = Args::parse();
 
-    let mut sockets = match scripts::start_script_engine(&args.project) {
+    let db = Arc::new(Database::new(&args.project).unwrap_or_else(|err| {
+        eprintln!("Failed to open database: {}", err);
+        std::process::exit(1);
+    }));
+
+    let mut sockets = match scripts::start_script_engine(&args.project, db) {
         Ok(sockets) => sockets,
         Err(err) => {
             eprintln!("Failed to start script engine: {}", err);

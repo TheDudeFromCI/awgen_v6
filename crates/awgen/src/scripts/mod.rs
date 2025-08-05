@@ -17,8 +17,13 @@ pub use packet_in::PacketIn;
 pub use packet_out::PacketOut;
 pub use plugin::ScriptEnginePlugin;
 
+use crate::database::Database;
+
 /// Spawns a new thread to run the script engine.
-pub fn start_script_engine(project_folder: &Path) -> Result<ScriptSockets, ScriptEngineError> {
+pub fn start_script_engine(
+    project_folder: &Path,
+    database: Arc<Database>,
+) -> Result<ScriptSockets, ScriptEngineError> {
     let folder = project_folder.join("scripts");
 
     let (send_to_engine, get_from_client) = smol::channel::unbounded();
@@ -28,7 +33,7 @@ pub fn start_script_engine(project_folder: &Path) -> Result<ScriptSockets, Scrip
         .name("script_engine".to_string())
         .spawn(move || -> Result<(), ScriptEngineError> {
             let (mut runtime, mod_handle) =
-                prepare_script_engine(&folder, send_to_client, get_from_client)?;
+                prepare_script_engine(&folder, send_to_client, get_from_client, database)?;
             runtime.call_entrypoint::<Undefined>(&mod_handle, json_args!())?;
             Ok(())
         })?;
@@ -66,6 +71,7 @@ fn prepare_script_engine(
     folder: &PathBuf,
     send_to_client: Sender<PacketIn>,
     get_from_client: Receiver<PacketOut>,
+    database: Arc<Database>,
 ) -> Result<(Runtime, ModuleHandle), ScriptEngineError> {
     let index = Module::load(folder.join("Main.ts"))?;
 
@@ -78,7 +84,7 @@ fn prepare_script_engine(
     })?;
 
     let socket = Arc::new(get_from_client);
-    api::register(&mut runtime, socket, send_to_client)?;
+    api::register(&mut runtime, socket, send_to_client, database)?;
 
     let mod_ref = modules.iter().collect::<Vec<_>>();
     let mod_handle = runtime.load_modules(&index, mod_ref)?;

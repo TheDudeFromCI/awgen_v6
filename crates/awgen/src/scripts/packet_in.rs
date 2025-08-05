@@ -20,8 +20,8 @@ pub enum PacketIn {
         /// The name of the game.
         name: String,
 
-        /// The game version -- a tuple of (major, minor, patch).
-        version: (u32, u32, u32),
+        /// The game version.
+        version: String,
     },
 
     /// A packet that contains a collection of packets from the

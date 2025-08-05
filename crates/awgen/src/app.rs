@@ -13,9 +13,8 @@ pub struct GameInitSettings {
     /// The name of the game.
     pub name: String,
 
-    /// The version of the game, represented as a tuple of (major, minor,
-    /// patch).
-    pub version: (u32, u32, u32),
+    /// The version of the game.
+    pub version: String,
 
     /// Whether or not to launch the game in debug mode.
     pub debug: bool,
@@ -31,11 +30,9 @@ pub struct GameInitSettings {
 /// necessary plugins and resources.
 pub fn run(settings: GameInitSettings, sockets: ScriptSockets) -> AppExit {
     let window_title = format!(
-        "{} - {}.{}.{}{}",
+        "{} - {}{}",
         settings.name,
-        settings.version.0,
-        settings.version.1,
-        settings.version.2,
+        settings.version,
         if settings.debug { " (Debug)" } else { "" }
     );
 

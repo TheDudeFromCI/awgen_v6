@@ -1,12 +1,17 @@
 import { fetchPacket, sendPackets } from "./Sockets/Sockets.ts";
 import * as PacketFromClient from "./Sockets/PacketFromClient.ts";
 import * as PacketToClient from "./Sockets/PacketToClient.ts";
+import { Game } from "./Game.ts";
 
 export async function main() {
+  let game = new Game();
+
   let initPacket = (await fetchPacket()) as PacketFromClient.Init;
   console.log(`Received initialization packet: ${JSON.stringify(initPacket)}`);
 
-  sendPackets(new PacketToClient.Init("Awgen Game Engine", [0, 0, 1]));
+  let gameName = game.getSetting("game_name", "Awgen Game Engine");
+  let gameVersion = game.getSetting("game_version", "0.0.1");
+  sendPackets(new PacketToClient.Init(gameName, gameVersion));
 
   let run = true;
   while (run) {
