@@ -7,13 +7,12 @@ authors = ["TheDudeFromCI"]
 
 [dependencies]
 bevy = "0.15.0"
-deno_core = { version = "0.323.0", default-features = false }
-rustyscript = { version = "0.11", default-features = false }
+rustyscript = { git = 'https://github.com/rscarson/rustyscript', features = [
+  "all_extensions",
+] }
 serde_json = "1"
 smol = "2"
 thiserror = "2"
 
-# https://github.com/rscarson/rustyscript/issues/332
-deno_media_type = "=0.2.6"
 clap = { version = "4.5.40", features = ["derive"] }
 serde = { version = "1.0.219", features = ["derive"] }

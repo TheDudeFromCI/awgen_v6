@@ -10,7 +10,6 @@ use bevy::log::debug;
 use rustyscript::{Module, ModuleHandle, Runtime, RuntimeOptions, Undefined, json_args};
 use smol::channel::{Receiver, Sender, TryRecvError};
 
-mod awgen_ext;
 mod packet_in;
 mod packet_out;
 mod plugin;
@@ -69,14 +68,13 @@ fn prepare_script_engine(
     send_to_client: Sender<PacketIn>,
     get_from_client: Receiver<PacketOut>,
 ) -> Result<(Runtime, ModuleHandle), ScriptEngineError> {
-    let index = Module::load(folder.join("index.ts"))?;
+    let index = Module::load(folder.join("Main.ts"))?;
 
     let mut modules = vec![];
     find_modules(folder, &mut modules, &index)?;
 
     let mut runtime = Runtime::new(RuntimeOptions {
         default_entrypoint: Some("main".to_string()),
-        extensions: vec![awgen_ext::awgen::init_ops_and_esm()],
         ..Default::default()
     })?;
 
@@ -215,5 +213,11 @@ impl ScriptSockets {
     /// Sends a shutdown request to the script engine, if the socket is open.
     pub fn shutdown(&self) {
         let _ = self.send(PacketOut::Shutdown);
+    }
+
+    /// Shuts down the script engine and waits for it to finish execution.
+    pub fn shutdown_blocking(&mut self) -> Result<(), ScriptEngineError> {
+        self.shutdown();
+        self.join()
     }
 }

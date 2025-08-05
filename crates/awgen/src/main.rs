@@ -26,7 +26,7 @@ struct Args {
 fn main() -> AppExit {
     let args = Args::parse();
 
-    let sockets = match scripts::start_script_engine(&args.project) {
+    let mut sockets = match scripts::start_script_engine(&args.project) {
         Ok(sockets) => sockets,
         Err(err) => {
             eprintln!("Failed to start script engine: {}", err);
@@ -41,11 +41,31 @@ fn main() -> AppExit {
             "Failed to send initialization packet to script engine: {}",
             err
         );
+        if let Err(err2) = sockets.shutdown_blocking() {
+            eprintln!("The script engine has crashed: {}", err2);
+        }
         return AppExit::from_code(1);
     }
 
-    let Ok(PacketIn::Init { name, version }) = sockets.recv_blocking() else {
+    let init_packet = match sockets.recv_blocking() {
+        Ok(packet) => packet,
+        Err(err) => {
+            eprintln!(
+                "Failed to receive initialization packet from script engine: {}",
+                err
+            );
+            if let Err(err2) = sockets.shutdown_blocking() {
+                eprintln!("The script engine has crashed: {}", err2);
+            }
+            return AppExit::from_code(1);
+        }
+    };
+
+    let PacketIn::Init { name, version } = init_packet else {
         eprintln!("Script Engine failed to properly initialize the game.");
+        if let Err(err2) = sockets.shutdown_blocking() {
+            eprintln!("The script engine has crashed: {}", err2);
+        }
         return AppExit::from_code(1);
     };
 
