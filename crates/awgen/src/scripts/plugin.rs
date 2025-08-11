@@ -24,10 +24,10 @@ impl ScriptEnginePlugin {
 }
 
 impl Plugin for ScriptEnginePlugin {
-    fn build(&self, app: &mut App) {
+    fn build(&self, app_: &mut App) {
         let sockets = self.script_sockets.write().unwrap().take().unwrap();
 
-        app.insert_resource(ScriptEngine(sockets))
+        app_.insert_resource(ScriptEngine(sockets))
             .add_systems(PreUpdate, recv)
             .add_systems(Last, cleanup);
     }
@@ -48,7 +48,7 @@ struct PacketHandler<'w> {
 impl PacketHandler<'_> {
     /// Handles the shutdown packet.
     fn shutdown(&mut self) {
-        self.app_exit.send(AppExit::Success);
+        self.app_exit.write(AppExit::Success);
     }
 }
 

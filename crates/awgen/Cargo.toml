@@ -7,7 +7,7 @@ authors = ["TheDudeFromCI"]
 
 [dependencies]
 rustyscript = { git = 'https://github.com/rscarson/rustyscript' }
-bevy = "0.15.0"
+bevy = "0.16.1"
 serde_json = "1"
 smol = "2"
 thiserror = "2"

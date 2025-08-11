@@ -5,6 +5,7 @@ use bevy::prelude::*;
 use bevy::window::{PresentMode, WindowMode};
 use bevy::winit::WinitSettings;
 
+use crate::camera::CameraPlugin;
 use crate::scripts::{ScriptEnginePlugin, ScriptSockets};
 
 /// Settings for initializing the game.
@@ -51,7 +52,7 @@ pub fn run(settings: GameInitSettings, sockets: ScriptSockets) -> AppExit {
     };
 
     let window_mode = if settings.fullscreen {
-        WindowMode::Fullscreen(MonitorSelection::Primary)
+        WindowMode::Fullscreen(MonitorSelection::Primary, VideoModeSelection::Current)
     } else {
         WindowMode::Windowed
     };
@@ -77,13 +78,13 @@ pub fn run(settings: GameInitSettings, sockets: ScriptSockets) -> AppExit {
                     ..default()
                 }),
         )
-        .add_plugins(ScriptEnginePlugin::new(sockets))
-        .add_systems(Startup, camera)
+        .add_plugins((ScriptEnginePlugin::new(sockets), CameraPlugin))
+        .add_systems(Startup, setup_scene)
         .run()
 }
 
-/// Spaces a simple scene with a camera and a light.
-fn camera(
+/// Spaces a simple scene with a cube and a light.
+fn setup_scene(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut commands: Commands,
@@ -104,8 +105,4 @@ fn camera(
         },
         Transform::from_xyz(4.0, 8.0, 4.0),
     ));
-
-    let camera_pos = Vec3::new(-2.0, 2.5, 5.0);
-    let camera_transform = Transform::from_translation(camera_pos).looking_at(Vec3::ZERO, Vec3::Y);
-    commands.spawn((Camera3d::default(), camera_transform));
 }

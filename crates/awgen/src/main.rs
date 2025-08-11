@@ -13,6 +13,7 @@ use crate::database::Database;
 use crate::scripts::PacketIn;
 
 mod app;
+mod camera;
 mod database;
 mod scripts;
 
