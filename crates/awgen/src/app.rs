@@ -78,7 +78,11 @@ pub fn run(settings: GameInitSettings, sockets: ScriptSockets) -> AppExit {
                     ..default()
                 }),
         )
-        .add_plugins((ScriptEnginePlugin::new(sockets), CameraPlugin))
+        .add_plugins((
+            bevy_framepace::FramepacePlugin,
+            ScriptEnginePlugin::new(sockets),
+            CameraPlugin,
+        ))
         .add_systems(Startup, setup_scene)
         .run()
 }

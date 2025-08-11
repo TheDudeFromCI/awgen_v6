@@ -4,6 +4,7 @@ use bevy::input::keyboard::KeyboardInput;
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;
 use bevy::render::camera::ScalingMode;
+use bevy_framepace::{FramepaceSettings, Limiter};
 
 /// This plugin implements camera functionality to the game engine.
 pub struct CameraPlugin;
@@ -191,8 +192,11 @@ impl CameraController {
     }
 }
 
-/// Creates the main camera on startup.
-fn setup_camera(mut commands: Commands) {
+/// Creates the main camera on startup. This system also sets the default
+/// framerate limit  to 60 FPS.
+fn setup_camera(mut framepace_settings: ResMut<FramepaceSettings>, mut commands: Commands) {
+    framepace_settings.limiter = Limiter::from_framerate(60.0);
+
     commands.spawn((
         Camera3d::default(),
         CameraController::default(),
