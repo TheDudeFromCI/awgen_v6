@@ -1,5 +1,6 @@
 //! This module prepares and launches the Bevy framework.
 
+use bevy::asset::io::AssetSourceBuilder;
 use bevy::log::LogPlugin;
 use bevy::prelude::*;
 use bevy::window::{PresentMode, WindowMode};
@@ -7,10 +8,14 @@ use bevy::winit::WinitSettings;
 
 use crate::camera::CameraPlugin;
 use crate::scripts::{ScriptEnginePlugin, ScriptSockets};
+use crate::tileset::TilesetPlugin;
 
 /// Settings for initializing the game.
 #[derive(Debug)]
 pub struct GameInitSettings {
+    /// The project folder where the game assets are located.
+    pub project_folder: String,
+
     /// The name of the game.
     pub name: String,
 
@@ -57,9 +62,20 @@ pub fn run(settings: GameInitSettings, sockets: ScriptSockets) -> AppExit {
         WindowMode::Windowed
     };
 
+    let game_assets = format!("{}/assets", settings.project_folder);
+    let editor_assets = format!("{}/editor/assets", settings.project_folder,);
+
     App::new()
         .insert_resource(ClearColor(Color::BLACK))
         .insert_resource(WinitSettings::game())
+        .register_asset_source(
+            "game",
+            AssetSourceBuilder::platform_default(&game_assets, None),
+        )
+        .register_asset_source(
+            "editor",
+            AssetSourceBuilder::platform_default(&editor_assets, None),
+        )
         .add_plugins(
             DefaultPlugins
                 .set(WindowPlugin {
@@ -82,6 +98,7 @@ pub fn run(settings: GameInitSettings, sockets: ScriptSockets) -> AppExit {
             bevy_framepace::FramepacePlugin,
             ScriptEnginePlugin::new(sockets),
             CameraPlugin,
+            TilesetPlugin,
         ))
         .add_systems(Startup, setup_scene)
         .run()

@@ -16,6 +16,7 @@ mod app;
 mod camera;
 mod database;
 mod scripts;
+mod tileset;
 
 /// The arguments for the command line interface.
 #[derive(Debug, Parser)]
@@ -66,6 +67,7 @@ fn main() -> AppExit {
     };
 
     let settings = app::GameInitSettings {
+        project_folder: args.project.to_string_lossy().to_string(),
         name,
         version,
         debug: cfg!(debug_assertions),

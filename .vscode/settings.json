@@ -11,10 +11,16 @@
   },
   "cSpell.words": [
     "Awgen",
+    "calloop",
     "Egui",
     "Framepace",
     "rustyscript",
     "smol",
-    "tinyfiledialogs"
+    "srgb",
+    "tileset",
+    "tinyfiledialogs",
+    "vsync",
+    "wgpu",
+    "winit"
   ]
 }
