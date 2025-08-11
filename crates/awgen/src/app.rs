@@ -92,7 +92,8 @@ pub fn run(settings: GameInitSettings, sockets: ScriptSockets) -> AppExit {
                     level: debug_level,
                     filter: "wgpu=error,naga=warn,calloop=debug,polling=debug".to_string(),
                     ..default()
-                }),
+                })
+                .set(ImagePlugin::default_nearest()),
         )
         .add_plugins((
             bevy_framepace::FramepacePlugin,
