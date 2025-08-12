@@ -1,7 +1,7 @@
 //! The scripting plugin for the Awgen game engine.
 
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::thread::JoinHandle;
 
@@ -21,11 +21,9 @@ use crate::database::Database;
 
 /// Spawns a new thread to run the script engine.
 pub fn start_script_engine(
-    project_folder: &Path,
+    folder: PathBuf,
     database: Arc<Database>,
 ) -> Result<ScriptSockets, ScriptEngineError> {
-    let folder = project_folder.join("scripts");
-
     let (send_to_engine, get_from_client) = smol::channel::unbounded();
     let (send_to_client, get_from_engine) = smol::channel::unbounded();
 

@@ -193,12 +193,12 @@ impl CameraController {
 
     /// Rotates the camera clockwise by 90 degrees around the Y-axis.
     pub fn rotate_cw(&mut self) {
-        self.target_rot.y = (self.target_rot.y + 90.0) % 360.0;
+        self.target_rot.y += 90.0;
     }
 
     /// Rotates the camera counter-clockwise by 90 degrees around the Y-axis.
     pub fn rotate_ccw(&mut self) {
-        self.target_rot.y = (self.target_rot.y - 90.0) % 360.0;
+        self.target_rot.y -= 90.0;
     }
 }
 
@@ -255,7 +255,7 @@ fn rotate_camera(
         if key_ev.key_code == KeyCode::KeyQ {
             for mut controller in camera_controllers.iter_mut() {
                 if controller.active {
-                    controller.rotate_cw();
+                    controller.rotate_ccw();
                 }
             }
         }
@@ -263,7 +263,7 @@ fn rotate_camera(
         if key_ev.key_code == KeyCode::KeyE {
             for mut controller in camera_controllers.iter_mut() {
                 if controller.active {
-                    controller.rotate_ccw();
+                    controller.rotate_cw();
                 }
             }
         }

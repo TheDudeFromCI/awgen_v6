@@ -25,6 +25,10 @@ struct Args {
     /// The project folder.
     #[arg(long, default_value = "project")]
     project: PathBuf,
+
+    /// Whether to run the game in editor mode.
+    #[arg(long, default_value_t = false)]
+    editor: bool,
 }
 
 /// Run the Awgen game engine.
@@ -36,7 +40,13 @@ fn main() -> AppExit {
         std::process::exit(1);
     }));
 
-    let mut sockets = match scripts::start_script_engine(&args.project, db) {
+    let script_path = if args.editor {
+        args.project.join("editor/scripts")
+    } else {
+        args.project.join("scripts")
+    };
+
+    let mut sockets = match scripts::start_script_engine(script_path, db) {
         Ok(sockets) => sockets,
         Err(err) => {
             eprintln!("Failed to start script engine: {}", err);

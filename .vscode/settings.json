@@ -17,10 +17,15 @@
     "rustyscript",
     "smol",
     "srgb",
+    "srgba",
     "tileset",
+    "Tilesets",
     "tinyfiledialogs",
+    "Unorm",
+    "VERTS",
     "vsync",
     "wgpu",
+    "wgsl",
     "winit"
   ]
 }

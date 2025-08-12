@@ -8,7 +8,7 @@ use bevy::winit::WinitSettings;
 
 use crate::camera::CameraPlugin;
 use crate::scripts::{ScriptEnginePlugin, ScriptSockets};
-use crate::tileset::TilesetPlugin;
+use crate::tileset::{TerrainMesh, TerrainQuad, Tileset, TilesetMaterial, TilesetPlugin};
 
 /// Settings for initializing the game.
 #[derive(Debug)]
@@ -107,24 +107,74 @@ pub fn run(settings: GameInitSettings, sockets: ScriptSockets) -> AppExit {
 
 /// Spaces a simple scene with a cube and a light.
 fn setup_scene(
+    asset_server: Res<AssetServer>,
+    mut images: ResMut<Assets<Image>>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut tilesets: ResMut<Assets<Tileset>>,
+    mut tileset_materials: ResMut<Assets<TilesetMaterial>>,
     mut commands: Commands,
 ) {
-    commands.spawn((
-        Mesh3d(meshes.add(Plane3d::default().mesh().size(5.0, 5.0))),
-        MeshMaterial3d(materials.add(Color::srgb(0.3, 0.5, 0.3))),
-    ));
-    commands.spawn((
-        Mesh3d(meshes.add(Cuboid::new(1.0, 1.0, 1.0))),
-        MeshMaterial3d(materials.add(Color::srgb(0.8, 0.7, 0.6))),
-        Transform::from_xyz(0.0, 0.5, 0.0),
-    ));
     commands.spawn((
         PointLight {
             shadows_enabled: true,
             ..Default::default()
         },
         Transform::from_xyz(4.0, 8.0, 4.0),
+    ));
+
+    let mut terrain = TerrainMesh::new();
+
+    // grass plane
+    for x in -2 ..= 2 {
+        for z in -2 ..= 2 {
+            terrain.add_quad(
+                TerrainQuad::unit()
+                    .shift(Vec3::new(x as f32, 0.0, z as f32))
+                    .set_layer(0),
+            );
+        }
+    }
+
+    // dirt cube
+    terrain.add_quad(TerrainQuad::unit().shift(Vec3::Y).set_layer(1));
+    terrain.add_quad(
+        TerrainQuad::unit()
+            .rotate(Quat::from_rotation_x(90f32.to_radians()))
+            .shift(Vec3::new(0.0, 0.5, 0.5))
+            .set_layer(1),
+    );
+    terrain.add_quad(
+        TerrainQuad::unit()
+            .rotate(Quat::from_rotation_x(-90f32.to_radians()))
+            .shift(Vec3::new(0.0, 0.5, -0.5))
+            .set_layer(1),
+    );
+    terrain.add_quad(
+        TerrainQuad::unit()
+            .rotate(Quat::from_rotation_z(-90f32.to_radians()))
+            .shift(Vec3::new(0.5, 0.5, 0.0))
+            .set_layer(1),
+    );
+    terrain.add_quad(
+        TerrainQuad::unit()
+            .rotate(Quat::from_rotation_z(90f32.to_radians()))
+            .shift(Vec3::new(-0.5, 0.5, 0.0))
+            .set_layer(1),
+    );
+
+    let mut tileset = Tileset::new(&mut images);
+    let mut tileset_editor = tileset.edit(&mut images, &asset_server);
+    tileset_editor.append_deferred("game://tiles/grass.png");
+    tileset_editor.append_deferred("game://tiles/dirt.png");
+
+    let tileset_mat = TilesetMaterial {
+        texture: tileset.image().clone(),
+        alpha_mode: AlphaMode::Opaque,
+        _tileset: tilesets.add(tileset),
+    };
+
+    commands.spawn((
+        Mesh3d(meshes.add(terrain)),
+        MeshMaterial3d(tileset_materials.add(tileset_mat)),
     ));
 }
