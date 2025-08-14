@@ -9,8 +9,20 @@ use serde::{Deserialize, Serialize};
 /// The `PacketOut` enum, which is used to represent different types of
 /// outgoing packets that may be sent to the script engine.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "type", rename_all = "camelCase", deny_unknown_fields)]
+#[serde(
+    tag = "type",
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase",
+    deny_unknown_fields
+)]
 pub enum PacketOut {
     /// A packet to request the script engine to shut down.
     Shutdown,
+
+    /// This packet is used to notify the script engine that a file has been
+    /// dropped onto the application window.
+    FileDrop {
+        /// The file path of the dropped file.
+        path: String,
+    },
 }

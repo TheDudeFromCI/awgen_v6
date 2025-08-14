@@ -1,7 +1,7 @@
-import { GameSettings } from "./Settings";
-import { fetchPacket, sendPackets } from "./Sockets/Sockets.ts";
-import * as PacketToClient from "./Sockets/PacketToClient.ts";
-import * as PacketFromClient from "./Sockets/PacketFromClient";
+import * as PacketToClient from "./Packets/PacketToClient.ts";
+import { handlePacket } from "./Packets/PacketHandler.ts";
+import { fetchPacket, sendPackets } from "./Packets/Sockets.ts";
+import { GameSettings } from "./Settings.ts";
 import { TilesetList } from "./Tilesets.ts";
 
 /**
@@ -43,7 +43,7 @@ export class Game {
     while (Game.instance.running) {
       try {
         let packet = await fetchPacket();
-        await Game.instance.handlePacket(packet);
+        await handlePacket(packet);
       } catch (error) {
         console.error(error);
         Game.shutdown();
@@ -135,9 +135,11 @@ export class Game {
   /**
    * Shuts down the game client. This will send a shutdown packet to the
    * server and stop the game loop.
+   * @param alertClient Whether to inform the client that the game is shutting
+   * down. Defaults to true.
    * @throws Will throw an error if the game has not been initialized.
    */
-  public static shutdown(): void {
+  public static shutdown(alertClient: boolean = true): void {
     if (!Game.instance) {
       throw new Error("Game has not been started. Call Game.start() first.");
     }
@@ -148,25 +150,8 @@ export class Game {
     }
 
     console.log("Shutting down...");
-    sendPackets(new PacketToClient.Shutdown());
+    if (alertClient) sendPackets(new PacketToClient.Shutdown());
     Game.instance.running = false;
-  }
-
-  /**
-   * Handles a packet received from the server. This method will process the
-   * packet and perform the appropriate action based on its type.
-   * @param packet The packet received from the server. This method will handle
-   * the packet based on its type.
-   */
-  private async handlePacket(packet: PacketFromClient.Any): Promise<void> {
-    switch (packet.type) {
-      case "shutdown":
-        this.running = false;
-        break;
-
-      default:
-        console.warn(`Unknown packet type: ${packet.type}`);
-    }
   }
 
   /**

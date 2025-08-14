@@ -575,6 +575,7 @@ dependencies = [
  "bevy_framepace",
  "clap",
  "image",
+ "regex",
  "rustyscript",
  "serde",
  "serde_json",

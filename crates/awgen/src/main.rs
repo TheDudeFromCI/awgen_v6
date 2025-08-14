@@ -17,6 +17,7 @@ mod camera;
 mod database;
 mod scripts;
 mod tileset;
+mod ux;
 
 /// The arguments for the command line interface.
 #[derive(Debug, Parser)]

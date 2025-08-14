@@ -1,6 +1,5 @@
 //! The scripting plugin for the Awgen game engine.
 
-use std::fs;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::thread::JoinHandle;
@@ -15,7 +14,7 @@ mod plugin;
 
 pub use packet_in::PacketIn;
 pub use packet_out::PacketOut;
-pub use plugin::ScriptEnginePlugin;
+pub use plugin::{ScriptEngine, ScriptEnginePlugin};
 
 use crate::database::Database;
 
@@ -39,31 +38,6 @@ pub fn start_script_engine(
     Ok(ScriptSockets::new(thread, send_to_engine, get_from_engine))
 }
 
-/// A recursive function that finds and loads all TypeScript modules in a folder
-/// and its subfolders.
-fn find_modules(
-    folder: &PathBuf,
-    list: &mut Vec<Module>,
-    index: &Module,
-) -> Result<(), std::io::Error> {
-    if !folder.is_dir() {
-        return Ok(());
-    }
-
-    list.extend(
-        Module::load_dir(folder)?
-            .into_iter()
-            .filter(|module| module != index),
-    );
-
-    for entry in fs::read_dir(folder)?.flatten() {
-        let path = entry.path();
-        find_modules(&path, list, index)?;
-    }
-
-    Ok(())
-}
-
 /// Loads and prepares the script engine within the given script folder.
 fn prepare_script_engine(
     folder: &PathBuf,
@@ -73,9 +47,6 @@ fn prepare_script_engine(
 ) -> Result<(Runtime, ModuleHandle), ScriptEngineError> {
     let index = Module::load(folder.join("Main.ts"))?;
 
-    let mut modules = vec![];
-    find_modules(folder, &mut modules, &index)?;
-
     let mut runtime = Runtime::new(RuntimeOptions {
         default_entrypoint: Some("main".to_string()),
         ..Default::default()
@@ -84,8 +55,7 @@ fn prepare_script_engine(
     let socket = Arc::new(get_from_client);
     api::register(&mut runtime, socket, send_to_client, database)?;
 
-    let mod_ref = modules.iter().collect::<Vec<_>>();
-    let mod_handle = runtime.load_modules(&index, mod_ref)?;
+    let mod_handle = runtime.load_modules(&index, vec![])?;
     runtime.set_current_dir(folder)?;
 
     Ok((runtime, mod_handle))

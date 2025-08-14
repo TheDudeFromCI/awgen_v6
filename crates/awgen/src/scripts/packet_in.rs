@@ -10,7 +10,12 @@ use serde::{Deserialize, Serialize};
 /// The `PacketIn` enum, which is used to represent different types of
 /// incoming packets that may be received from the script engine.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "type", rename_all = "camelCase", deny_unknown_fields)]
+#[serde(
+    tag = "type",
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase",
+    deny_unknown_fields
+)]
 pub enum PacketIn {
     /// A packet that contains the initial game state settings, which is sent
     /// when the script engine starts up. This packet must always be the first
@@ -33,4 +38,13 @@ pub enum PacketIn {
 
     /// Requests for the app to shutdown safely.
     Shutdown,
+
+    /// Import an asset file into the project directory.
+    ImportAsset {
+        /// The OS filepath of the asset file to import.
+        file: String,
+
+        /// The local asset path to use within the project.
+        asset_path: String,
+    },
 }

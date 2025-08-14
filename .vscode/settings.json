@@ -13,6 +13,7 @@
     "Awgen",
     "calloop",
     "Egui",
+    "filedrop",
     "Framepace",
     "rustyscript",
     "smol",

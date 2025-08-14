@@ -1,5 +1,5 @@
-import { Any as PacketToClient } from "./PacketToClient";
-import { Any as PacketFromClient } from "./PacketFromClient";
+import { Any as PacketToClient } from "./PacketToClient.ts";
+import { Any as PacketFromClient } from "./PacketFromClient.ts";
 
 /**
  * Fetches the next packet from the client.
@@ -14,6 +14,6 @@ export const fetchPacket =
  * @param packets - The packets to send to the client. Multiple packets can be
  * sent at once by passing them as separate arguments.
  */
-export const sendPackets = (...packets: PacketToClient[]) =>
+export const sendPackets = (...packets: PacketToClient[]): void =>
   // @ts-ignore
   rustyscript.functions["sendPackets"](...packets);

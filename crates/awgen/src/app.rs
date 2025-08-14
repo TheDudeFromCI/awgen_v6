@@ -1,5 +1,7 @@
 //! This module prepares and launches the Bevy framework.
 
+use std::path::{Path, PathBuf};
+
 use bevy::asset::io::AssetSourceBuilder;
 use bevy::log::LogPlugin;
 use bevy::prelude::*;
@@ -9,6 +11,7 @@ use bevy::winit::WinitSettings;
 use crate::camera::CameraPlugin;
 use crate::scripts::{ScriptEnginePlugin, ScriptSockets};
 use crate::tileset::{TerrainMesh, TerrainQuad, Tileset, TilesetMaterial, TilesetPlugin};
+use crate::ux::UxPlugin;
 
 /// Settings for initializing the game.
 #[derive(Debug)]
@@ -30,6 +33,19 @@ pub struct GameInitSettings {
 
     /// Whether or not to launch the game in fullscreen mode.
     pub fullscreen: bool,
+}
+
+#[derive(Debug, Resource)]
+pub struct ProjectSettings {
+    /// The project folder.
+    project_folder: PathBuf,
+}
+
+impl ProjectSettings {
+    /// Gets the project folder path.
+    pub fn project_folder(&self) -> &Path {
+        self.project_folder.as_path()
+    }
 }
 
 /// Launch a new game window with the Bevy framework, setting up the
@@ -62,12 +78,17 @@ pub fn run(settings: GameInitSettings, sockets: ScriptSockets) -> AppExit {
         WindowMode::Windowed
     };
 
+    let project_settings = ProjectSettings {
+        project_folder: PathBuf::from(settings.project_folder.clone()),
+    };
+
     let game_assets = format!("{}/assets", settings.project_folder);
     let editor_assets = format!("{}/editor/assets", settings.project_folder,);
 
     App::new()
         .insert_resource(ClearColor(Color::BLACK))
         .insert_resource(WinitSettings::game())
+        .insert_resource(project_settings)
         .register_asset_source(
             "game",
             AssetSourceBuilder::platform_default(&game_assets, None),
@@ -100,6 +121,7 @@ pub fn run(settings: GameInitSettings, sockets: ScriptSockets) -> AppExit {
             ScriptEnginePlugin::new(sockets),
             CameraPlugin,
             TilesetPlugin,
+            UxPlugin,
         ))
         .add_systems(Startup, setup_scene)
         .run()
@@ -164,8 +186,8 @@ fn setup_scene(
 
     let mut tileset = Tileset::new(&mut images);
     let mut tileset_editor = tileset.edit(&mut images, &asset_server);
-    tileset_editor.append_deferred("game://tiles/grass.png");
-    tileset_editor.append_deferred("game://tiles/dirt.png");
+    tileset_editor.append_deferred("editor://tiles/grass.png");
+    tileset_editor.append_deferred("editor://tiles/dirt.png");
 
     let tileset_mat = TilesetMaterial {
         texture: tileset.image().clone(),
