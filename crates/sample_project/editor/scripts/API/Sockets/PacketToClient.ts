@@ -55,14 +55,14 @@ export class Set {
    * This can include multiple packets, such as those containing text, images,
    * or other data.
    */
-  packets: PacketToClient[];
+  packets: Any[];
 
   /**
    * Creates a new set packet.
    *
    * @param packets The packets to be sent to the client.
    */
-  constructor(...packets: PacketToClient[]) {
+  constructor(...packets: Any[]) {
     this.packets = packets;
   }
 }
@@ -80,4 +80,4 @@ export class Shutdown {
 /**
  * A union type representing all packets that can be sent to the client.
  */
-export type PacketToClient = Init | Set | Shutdown;
+export type Any = Init | Set | Shutdown;

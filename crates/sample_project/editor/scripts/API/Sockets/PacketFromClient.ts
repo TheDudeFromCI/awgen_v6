@@ -8,4 +8,4 @@ export interface Shutdown {
 /**
  * A union type representing all packets that can be received from the client.
  */
-export type PacketFromClient = Shutdown;
+export type Any = Shutdown;

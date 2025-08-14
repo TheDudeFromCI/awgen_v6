@@ -44,12 +44,28 @@ pub fn register(
     runtime.register_function(
         "sendPackets",
         move |args: &[Value]| -> Result<Value, Error> {
+            if args.is_empty() {
+                return Ok(Value::Null);
+            }
+
             debug!("Sending packets to client: {:?}", args);
+
+            let mut packets = vec![];
+
             for arg in args {
                 let packet = serde_json::from_value::<PacketIn>(arg.clone())
                     .map_err(|e| Error::Runtime(format!("Failed to parse packet: {e}")))?;
+                packets.push(packet);
+            }
+
+            if packets.len() == 1 {
                 send_to_client
-                    .send_blocking(packet)
+                    .send_blocking(packets.into_iter().next().unwrap())
+                    .map_err(|_| Error::Runtime("Failed to send packet".to_string()))?;
+            } else {
+                let compound = PacketIn::Set { packets };
+                send_to_client
+                    .send_blocking(compound)
                     .map_err(|_| Error::Runtime("Failed to send packet".to_string()))?;
             }
 

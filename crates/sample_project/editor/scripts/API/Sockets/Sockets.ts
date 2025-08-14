@@ -1,5 +1,5 @@
-import { PacketToClient } from "./PacketToClient";
-import { PacketFromClient } from "./PacketFromClient";
+import { Any as PacketToClient } from "./PacketToClient";
+import { Any as PacketFromClient } from "./PacketFromClient";
 
 /**
  * Fetches the next packet from the client.
