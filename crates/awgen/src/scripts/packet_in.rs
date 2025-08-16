@@ -47,4 +47,16 @@ pub enum PacketIn {
         /// The local asset path to use within the project.
         asset_path: String,
     },
+
+    /// Creates a new tileset from a list of tile asset paths.
+    ///
+    /// This packet will fail if the tiles cannot be loaded or if they are not
+    /// valid tile assets of equal size.
+    CreateTileset {
+        /// The list of asset paths for the corresponding tiles.
+        tile_paths: Vec<String>,
+
+        /// The output asset path for the tileset.
+        output_path: String,
+    },
 }

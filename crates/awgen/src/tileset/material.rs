@@ -10,7 +10,6 @@ use bevy::render::render_resource::{
     SpecializedMeshPipelineError,
 };
 
-use crate::tileset::Tileset;
 use crate::tileset::mesh::ATTRIBUTE_UV_LAYER;
 
 /// The path to the tileset shader.
@@ -26,11 +25,6 @@ pub struct TilesetMaterial {
 
     /// The alpha mode of the material.
     pub alpha_mode: AlphaMode,
-
-    /// The tileset handle, which is used to access the tileset data. This
-    /// handle is mostly used to keep the tileset alive while the material is in
-    /// use.
-    pub _tileset: Handle<Tileset>,
 }
 
 impl Material for TilesetMaterial {

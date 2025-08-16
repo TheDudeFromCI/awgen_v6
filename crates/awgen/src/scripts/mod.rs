@@ -8,6 +8,7 @@ use rustyscript::{Module, ModuleHandle, Runtime, RuntimeOptions, Undefined, json
 use smol::channel::{Receiver, Sender, TryRecvError};
 
 mod api;
+mod handler;
 mod packet_in;
 mod packet_out;
 mod plugin;

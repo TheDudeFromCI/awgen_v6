@@ -10,7 +10,7 @@ use bevy::winit::WinitSettings;
 
 use crate::camera::CameraPlugin;
 use crate::scripts::{ScriptEnginePlugin, ScriptSockets};
-use crate::tileset::{TerrainMesh, TerrainQuad, Tileset, TilesetMaterial, TilesetPlugin};
+use crate::tileset::{TerrainMesh, TerrainQuad, TilesetMaterial, TilesetPlugin};
 use crate::ux::UxPlugin;
 
 /// Settings for initializing the game.
@@ -130,9 +130,7 @@ pub fn run(settings: GameInitSettings, sockets: ScriptSockets) -> AppExit {
 /// Spaces a simple scene with a cube and a light.
 fn setup_scene(
     asset_server: Res<AssetServer>,
-    mut images: ResMut<Assets<Image>>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut tilesets: ResMut<Assets<Tileset>>,
     mut tileset_materials: ResMut<Assets<TilesetMaterial>>,
     mut commands: Commands,
 ) {
@@ -184,15 +182,11 @@ fn setup_scene(
             .set_layer(1),
     );
 
-    let mut tileset = Tileset::new(&mut images);
-    let mut tileset_editor = tileset.edit(&mut images, &asset_server);
-    tileset_editor.append_deferred("editor://tiles/grass.png");
-    tileset_editor.append_deferred("editor://tiles/dirt.png");
+    let tileset = asset_server.load("game://tilesets/terrain.tiles");
 
     let tileset_mat = TilesetMaterial {
-        texture: tileset.image().clone(),
+        texture: tileset,
         alpha_mode: AlphaMode::Opaque,
-        _tileset: tilesets.add(tileset),
     };
 
     commands.spawn((

@@ -62,23 +62,17 @@ export class ImportAsset {
   file: string;
 
   /**
-   * The path where the asset should be stored in the game assets.
-   *
-   * This must be a valid asset path, following the format:
-   * <br/>`game://my/path/asset.ext`
-   * or
-   * <br/>`editor://my/path/asset.ext`
+   * The path where the asset should be stored in the game assets. This must be
+   * a valid asset path.
    */
   assetPath: string;
 
   /**
    * Creates a new import asset packet.
-   * @param file The path of the file that should be imported into the game assets.
-   * @param assetPath The path where the asset should be stored in the game assets.
-   * This must be a valid asset path, following the format:
-   * <br/>`game://my/path/asset.ext`
-   * or
-   * <br/>`editor://my/path/asset.ext`
+   * @param file The path of the file that should be imported into the game
+   * assets.
+   * @param assetPath The path where the asset should be stored in the game
+   * assets. This must be a valid asset path.
    */
   constructor(file: string, assetPath: string) {
     this.file = file;
@@ -87,6 +81,44 @@ export class ImportAsset {
 }
 
 /**
+ * A packet that contains a request to create a tileset from a set of tile
+ * assets. Each tile asset must be a square image with a size that is a power
+ * of two. All tiles must be the size same.
+ */
+export class CreateTileset {
+  /**
+   * The type of the packet, which is always "createTileset" for this packet.
+   */
+  readonly type: "createTileset" = "createTileset";
+
+  /**
+   * The paths of the tiles that should be included in the tileset.
+   *
+   * This should be an array of strings, where each string is a valid asset path
+   * to a tile image.
+   */
+  tilePaths: string[];
+
+  /**
+   * The path where the tileset should be stored in the game assets. This must
+   * be a valid asset path.
+   */
+  outputPath: string;
+
+  /**
+   * Creates a new create tileset packet.
+   * @param tilePaths An array of strings representing the paths of the tiles
+   * that should be included in the tileset.
+   * @param outputPath The path where the tileset should be stored in the game
+   * assets. This must be a valid asset path.
+   */
+  constructor(tilePaths: string[], outputPath: string) {
+    this.tilePaths = tilePaths;
+    this.outputPath = outputPath;
+  }
+}
+
+/**
  * A union type representing all packets that can be sent to the client.
  */
-export type Any = Init | Shutdown | ImportAsset;
+export type Any = Init | Shutdown | ImportAsset | CreateTileset;

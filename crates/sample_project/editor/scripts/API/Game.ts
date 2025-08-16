@@ -3,6 +3,7 @@ import { handlePacket } from "./Packets/PacketHandler.ts";
 import { fetchPacket, sendPackets } from "./Packets/Sockets.ts";
 import { GameSettings } from "./Settings.ts";
 import { TilesetList } from "./Tilesets.ts";
+import { EventHandler, Events, EventType } from "./EventHandler.ts";
 
 /**
  * The key used to store the game name in the settings.
@@ -19,6 +20,7 @@ const GAME_VERSION_KEY = "game_version";
  * control the game client.
  */
 export class Game {
+  private static readonly events: Events = new Events();
   private static instance: Game | null = null;
 
   private readonly settings: GameSettings;
@@ -39,6 +41,7 @@ export class Game {
       return;
     }
     Game.instance = new Game(title, version);
+    await Game.emit("ready");
 
     while (Game.instance.running) {
       try {
@@ -199,5 +202,75 @@ export class Game {
     }
 
     Game.instance.settings.setSetting(key, value);
+  }
+
+  /**
+   * Call an event handler, if it exists. Events are called in the order they
+   * were registered, with temporary handlers always being called last.
+   * @param event The event to call.
+   * @param  args The arguments to pass to the event handler.
+   */
+  public static async emit(event: EventType, ...args: any[]): Promise<void> {
+    if (!Game.instance) {
+      throw new Error("Game has not been started. Call Game.start() first.");
+    }
+
+    await Game.events.emit(event, ...args);
+  }
+
+  /**
+   * Registers a new event handler for the given event. Multiple handlers can
+   * be registered for the same event.
+   *
+   * Any event handlers registered while an event is being emitted will not be
+   * called during the current event emission, and only be called during the
+   * next event emission.
+   * @param event The event to set the handler for.
+   * @param handler The handler to set. May be async.
+   */
+  public static on(event: EventType, handler: EventHandler): void {
+    Game.events.on(event, handler);
+  }
+
+  /**
+   * Registers a new event handler for the given event that will only be called
+   * once. The handler will be removed after it is called. Multiple handlers can
+   * be registered for the same event.
+   *
+   * Any event handlers registered while an event is being emitted will not be
+   * called during the current event emission, and only be called during the
+   * next event emission.
+   * @param event The event to set the handler for.
+   * @param handler The handler to set. May be async.
+   */
+  public static once(event: EventType, handler: EventHandler): void {
+    Game.events.once(event, handler);
+  }
+
+  /**
+   * Waits for the given event to be called. This is a convenience function that
+   * creates a promise that resolves when the event is called, returning the
+   * arguments passed to the event handler.
+   * @param event The event to wait for.
+   * @returns A promise that resolves when the event is called. Returns the
+   * arguments passed to the event handler.
+   */
+  public static async waitFor(event: EventType): Promise<any[]> {
+    if (!Game.instance) {
+      throw new Error("Game has not been started. Call Game.start() first.");
+    }
+
+    return await Game.events.waitFor(event);
+  }
+
+  /**
+   * Removes the given handler from the event emitter. If the handler does not
+   * exist, this function does nothing. If this function is called while an
+   * event is being emitted, the handler will be removed after the current event
+   * emission completes.
+   * @param handler The handler to remove.
+   */
+  public static removeListener(handler: EventHandler) {
+    Game.events.removeListener(handler);
   }
 }
