@@ -12,6 +12,7 @@ use smol::future;
 
 use crate::app::ProjectSettings;
 use crate::scripts::PacketIn;
+use crate::tileset::TilesetMaterial;
 use crate::tileset::builder::TilesetBuilderError;
 
 lazy_static! {
@@ -25,13 +26,22 @@ pub struct PacketHandler<'w, 's> {
     /// A list of potential tileset building tasks that may be running in the
     /// background.
     #[allow(clippy::type_complexity)]
-    tileset_tasks: Local<'s, Vec<Task<Result<(), TilesetBuilderError>>>>,
+    tileset_tasks: Local<'s, Vec<Task<(Handle<Image>, Result<Image, TilesetBuilderError>)>>>,
 
     /// Send app_exit events.
     app_exit: EventWriter<'w, AppExit>,
 
     /// The project settings.
     project_settings: Res<'w, ProjectSettings>,
+
+    /// The asset server.
+    asset_server: Res<'w, AssetServer>,
+
+    /// The resource containing all image assets.
+    images: ResMut<'w, Assets<Image>>,
+
+    /// The resource containing all tileset materials.
+    tileset_materials: ResMut<'w, Assets<TilesetMaterial>>,
 }
 
 impl PacketHandler<'_, '_> {
@@ -54,10 +64,17 @@ impl PacketHandler<'_, '_> {
 /// are done.
 fn check_tasks(handler: &mut PacketHandler) {
     handler.tileset_tasks.retain_mut(|task| {
-        if let Some(result) = block_on(future::poll_once(task)) {
+        if let Some((handle, result)) = block_on(future::poll_once(task)) {
             match result {
-                Ok(_) => {
+                Ok(image) => {
                     info!("Tileset creation task completed successfully.");
+
+                    if let Some(img_asset) = handler.images.get_mut(&handle) {
+                        *img_asset = image;
+
+                        // iter_mut() will force all materials to be updated
+                        for _ in handler.tileset_materials.iter_mut() {}
+                    };
                 }
                 Err(err) => {
                     error!("Failed to create tileset: {}", err);
@@ -154,9 +171,18 @@ fn create_tileset(
         .collect::<Result<Vec<PathBuf>, ()>>()?;
     let output_path = parse_asset_path(project_folder, &asset_path)?;
 
+    let handle = handler
+        .asset_server
+        .get_handle(&asset_path)
+        .unwrap_or_else(|| handler.images.reserve_handle());
+
     let thread_pool = AsyncComputeTaskPool::get();
-    let task = thread_pool
-        .spawn(async move { crate::tileset::builder::create_tileset(tile_paths, output_path) });
+    let task = thread_pool.spawn(async move {
+        (
+            handle,
+            crate::tileset::builder::create_tileset(tile_paths, output_path),
+        )
+    });
     handler.tileset_tasks.push(task);
 
     Ok(())

@@ -5,6 +5,8 @@ import { Game } from "./API/Game.ts";
 export async function main() {
   Game.once("ready", async () => {
     console.log("Game is ready!");
+    await sleep(7500);
+
     sendPackets(
       new PacketToClient.CreateTileset(
         ["editor://tiles/grass.png", "editor://tiles/dirt.png"],
@@ -14,4 +16,8 @@ export async function main() {
   });
 
   await Game.start("Awgen Game Engine", "0.0.1");
+}
+
+async function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

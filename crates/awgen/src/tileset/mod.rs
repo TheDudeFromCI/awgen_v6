@@ -7,6 +7,7 @@ mod asset_loader;
 pub mod builder;
 mod material;
 mod mesh;
+mod tileset;
 
 pub use material::TilesetMaterial;
 pub use mesh::{TerrainMesh, TerrainQuad, TerrainTriangle, TerrainVertex};
