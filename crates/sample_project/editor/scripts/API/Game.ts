@@ -3,7 +3,7 @@ import { handlePacket } from "./Packets/PacketHandler.ts";
 import { fetchPacket, sendPackets } from "./Packets/Sockets.ts";
 import { GameSettings } from "./Settings.ts";
 import { TilesetList } from "./Tilesets.ts";
-import { EventHandler, Events, EventType } from "./EventHandler.ts";
+import { Events } from "./Events.ts";
 
 /**
  * The key used to store the game name in the settings.
@@ -20,7 +20,7 @@ const GAME_VERSION_KEY = "game_version";
  * control the game client.
  */
 export class Game {
-  private static readonly events: Events = new Events();
+  private static readonly events: Events<GameEvents> = new Events();
   private static instance: Game | null = null;
 
   private readonly settings: GameSettings;
@@ -210,12 +210,15 @@ export class Game {
    * @param event The event to call.
    * @param  args The arguments to pass to the event handler.
    */
-  public static async emit(event: EventType, ...args: any[]): Promise<void> {
+  public static async emit<E extends keyof GameEvents>(
+    event: keyof GameEvents,
+    ...args: Parameters<GameEvents[E]>
+  ): Promise<void> {
     if (!Game.instance) {
       throw new Error("Game has not been started. Call Game.start() first.");
     }
 
-    await Game.events.emit(event, ...args);
+    await Game.events.emit(event, args);
   }
 
   /**
@@ -228,7 +231,10 @@ export class Game {
    * @param event The event to set the handler for.
    * @param handler The handler to set. May be async.
    */
-  public static on(event: EventType, handler: EventHandler): void {
+  public static on<E extends keyof GameEvents>(
+    event: E,
+    handler: (...args: Parameters<GameEvents[E]>) => Promise<void>
+  ): void {
     Game.events.on(event, handler);
   }
 
@@ -243,7 +249,10 @@ export class Game {
    * @param event The event to set the handler for.
    * @param handler The handler to set. May be async.
    */
-  public static once(event: EventType, handler: EventHandler): void {
+  public static once<E extends keyof GameEvents>(
+    event: E,
+    handler: (...args: Parameters<GameEvents[E]>) => Promise<void>
+  ): void {
     Game.events.once(event, handler);
   }
 
@@ -255,7 +264,9 @@ export class Game {
    * @returns A promise that resolves when the event is called. Returns the
    * arguments passed to the event handler.
    */
-  public static async waitFor(event: EventType): Promise<any[]> {
+  public static async waitFor<E extends keyof GameEvents>(
+    event: E
+  ): Promise<Parameters<GameEvents[E]>> {
     if (!Game.instance) {
       throw new Error("Game has not been started. Call Game.start() first.");
     }
@@ -270,7 +281,15 @@ export class Game {
    * emission completes.
    * @param handler The handler to remove.
    */
-  public static removeListener(handler: EventHandler) {
+  public static removeListener(handler: (...args: any[]) => Promise<void>) {
     Game.events.removeListener(handler);
   }
 }
+
+/**
+ * Events that can be emitted by the game. This list can be expanded by
+ * developers to include custom events.
+ */
+export type GameEvents = {
+  ready: () => Promise<void>;
+};

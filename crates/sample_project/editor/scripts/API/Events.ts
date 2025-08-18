@@ -1,22 +1,21 @@
 /**
- * A specific event type that can be handled by the Events class.
+ * A map of event types to their corresponding event handlers.
  */
-export type EventType = string;
+export type EventMap = {
+  [key: string]: (...args: any[]) => Promise<void>;
+};
 
-/**
- * A specific event handler type that can be used to handle events.
- */
-export type EventHandler = (...args: any[]) => Promise<void>;
+type HandlerDict<A extends EventMap> = {
+  [E in keyof A]: ((...args: Parameters<A[E]>) => Promise<void>)[];
+};
 
 /**
  * This class can be inherited and used to handle event callbacks.
  */
-export class Events {
-  private onHandlers: { [id: EventType]: EventHandler[] } = {};
-  private onceHandlers: { [id: EventType]: EventHandler[] } = {};
-  private toRegisterOn: [EventType, EventHandler][] = [];
-  private toRegisterOnce: [EventType, EventHandler][] = [];
-  private toRemove: EventHandler[] = [];
+export class Events<A extends EventMap> {
+  private onHandlers: HandlerDict<A> = {} as HandlerDict<A>;
+  private onceHandlers: HandlerDict<A> = {} as HandlerDict<A>;
+  private toRemove: ((...args: any[]) => Promise<void>)[] = [];
   private isEmitting = false;
 
   /**
@@ -25,7 +24,10 @@ export class Events {
    * @param event The event to call.
    * @param  args The arguments to pass to the event handler.
    */
-  public async emit(event: EventType, ...args: any[]): Promise<void> {
+  public async emit<E extends keyof A>(
+    event: E,
+    args: Parameters<A[E]>
+  ): Promise<void> {
     let wasEmitting = this.isEmitting;
     this.isEmitting = true;
 
@@ -44,16 +46,6 @@ export class Events {
 
     this.isEmitting = wasEmitting;
     if (!this.isEmitting) {
-      for (const [event, handler] of this.toRegisterOn) {
-        this.on(event, handler);
-      }
-      this.toRegisterOn = [];
-
-      for (const [event, handler] of this.toRegisterOnce) {
-        this.once(event, handler);
-      }
-      this.toRegisterOnce = [];
-
       for (const handler of this.toRemove) {
         this.removeListener(handler);
       }
@@ -71,12 +63,10 @@ export class Events {
    * @param event The event to set the handler for.
    * @param handler The handler to set. May be async.
    */
-  public on(event: EventType, handler: EventHandler): void {
-    if (this.isEmitting) {
-      this.toRegisterOn.push([event, handler]);
-      return;
-    }
-
+  public on<E extends keyof A>(
+    event: E,
+    handler: (...args: Parameters<A[E]>) => Promise<void>
+  ): void {
     if (!this.onHandlers[event]) {
       this.onHandlers[event] = [];
     }
@@ -95,12 +85,10 @@ export class Events {
    * @param event The event to set the handler for.
    * @param handler The handler to set. May be async.
    */
-  public once(event: EventType, handler: EventHandler): void {
-    if (this.isEmitting) {
-      this.toRegisterOn.push([event, handler]);
-      return;
-    }
-
+  public once<E extends keyof A>(
+    event: E,
+    handler: (...args: Parameters<A[E]>) => Promise<void>
+  ): void {
     if (!this.onceHandlers[event]) {
       this.onceHandlers[event] = [];
     }
@@ -116,7 +104,7 @@ export class Events {
    * @returns A promise that resolves when the event is called. Returns the
    * arguments passed to the event handler.
    */
-  public async waitFor(event: EventType): Promise<any[]> {
+  public async waitFor<E extends keyof A>(event: E): Promise<Parameters<A[E]>> {
     return await new Promise((resolve) => {
       this.once(event, async (...args) => resolve(args));
     });
@@ -129,7 +117,7 @@ export class Events {
    * emission completes.
    * @param handler The handler to remove.
    */
-  public removeListener(handler: EventHandler) {
+  public removeListener(handler: (...args: any[]) => Promise<void>) {
     if (this.isEmitting) {
       this.toRemove.push(handler);
       return;

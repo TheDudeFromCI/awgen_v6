@@ -9,8 +9,6 @@
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": false,
-    "rootDir": "./",
-    "baseUrl": "./",
     "allowJs": false
   }
 }
