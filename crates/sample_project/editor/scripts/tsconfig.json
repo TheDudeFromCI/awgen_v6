@@ -5,6 +5,8 @@
     "paths": {},
     "allowImportingTsExtensions": true,
     "noEmit": true,
+    "baseUrl": ".",
+    "rootDir": ".",
     "esModuleInterop": false,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
