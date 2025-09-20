@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use bevy::prelude::*;
 use image::ImageReader;
 
-use crate::tileset::tileset::{Tileset, TilesetError};
+use crate::tiles::tileset::{Tileset, TilesetError};
 
 /// Creates a new tileset file from a list of provided tile image paths.
 ///

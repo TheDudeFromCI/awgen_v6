@@ -574,6 +574,7 @@ dependencies = [
  "bevy",
  "bevy_framepace",
  "clap",
+ "futures",
  "image",
  "lazy_static",
  "regex",

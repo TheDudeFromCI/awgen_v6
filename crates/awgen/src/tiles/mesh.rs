@@ -8,6 +8,8 @@ use bevy::prelude::*;
 use bevy::render::mesh::{Indices, MeshVertexAttribute, PrimitiveTopology};
 use bevy::render::render_resource::VertexFormat;
 
+use crate::tiles::TileRot;
+
 /// A vertex attribute that stores the texture coordinates `(x, y)` of a vertex
 /// and the texture array layer it belongs to `(z)`.
 pub const ATTRIBUTE_UV_LAYER: MeshVertexAttribute =
@@ -104,54 +106,36 @@ impl TerrainMesh {
             .extend(other.indices.iter().map(|i| i + offset));
     }
 
-    /// Appends a triangle to the mesh.
-    pub fn add_triangle(&mut self, triangle: TerrainTriangle) {
+    /// Appends a [`TerrainPoly`] to the mesh.
+    pub fn add_polygon(&mut self, poly: impl TerrainPoly) {
         let offset = self.positions.len() as u32;
 
-        for vert in triangle.vertices() {
-            let pos = [vert.position.x, vert.position.y, vert.position.z];
-            let uv = [vert.uv.x, vert.uv.y, vert.layer as f32];
-            let normal = [vert.normal.x, vert.normal.y, vert.normal.z];
+        for i in 0 .. poly.tri_count() + 2 {
+            if let Some(vert) = poly.get_vertex(i) {
+                let pos = [vert.position.x, vert.position.y, vert.position.z];
+                let uv = [vert.uv.x, vert.uv.y, vert.layer as f32];
+                let normal = [vert.normal.x, vert.normal.y, vert.normal.z];
 
-            let color = vert.color.to_srgba();
-            let color = [color.red, color.green, color.blue, color.alpha];
+                let color = vert.color.to_srgba();
+                let color = [color.red, color.green, color.blue, color.alpha];
 
-            self.positions.push(pos);
-            self.uvs.push(uv);
-            self.normals.push(normal);
-            self.colors.push(color);
+                self.positions.push(pos);
+                self.uvs.push(uv);
+                self.normals.push(normal);
+                self.colors.push(color);
+            }
         }
 
-        self.indices.push(offset);
-        self.indices.push(offset + 1);
-        self.indices.push(offset + 2);
+        for i in 0 .. poly.tri_count() as u32 {
+            self.indices.push(offset);
+            self.indices.push(offset + i + 1);
+            self.indices.push(offset + i + 2);
+        }
     }
 
-    /// Appends a quad to the mesh.
-    pub fn add_quad(&mut self, quad: TerrainQuad) {
-        let offset = self.positions.len() as u32;
-
-        for vert in quad.vertices() {
-            let pos = [vert.position.x, vert.position.y, vert.position.z];
-            let uv = [vert.uv.x, vert.uv.y, vert.layer as f32];
-            let normal = [vert.normal.x, vert.normal.y, vert.normal.z];
-
-            let color = vert.color.to_srgba();
-            let color = [color.red, color.green, color.blue, color.alpha];
-
-            self.positions.push(pos);
-            self.uvs.push(uv);
-            self.normals.push(normal);
-            self.colors.push(color);
-        }
-
-        self.indices.push(offset);
-        self.indices.push(offset + 1);
-        self.indices.push(offset + 2);
-
-        self.indices.push(offset);
-        self.indices.push(offset + 2);
-        self.indices.push(offset + 3);
+    /// Returns `true` if the mesh is empty.
+    pub fn is_empty(&self) -> bool {
+        self.positions.is_empty() || self.indices.is_empty()
     }
 }
 
@@ -224,13 +208,6 @@ impl Mul<TerrainVertex> for Transform {
 #[derive(Debug, Clone, Copy)]
 pub struct TerrainTriangle(pub TerrainVertex, pub TerrainVertex, pub TerrainVertex);
 
-impl TerrainTriangle {
-    /// Returns an array of the vertices of the triangle.
-    fn vertices(&self) -> [TerrainVertex; 3] {
-        [self.0, self.1, self.2]
-    }
-}
-
 /// A quad that stores the vertices for a [`TerrainMesh`].
 #[derive(Debug, Clone, Copy)]
 pub struct TerrainQuad(
@@ -241,8 +218,8 @@ pub struct TerrainQuad(
 );
 
 impl TerrainQuad {
-    /// Creates a new `TerrainQuad` centered at the origin with a size of 1x1
-    /// and a normal of `Vec3::Y`.
+    /// Creates a new [`TerrainQuad`] centered at the origin with a size of 1x1
+    /// and a normal of [`Vec3::Y`].
     pub fn unit() -> Self {
         let v1 = TerrainVertex {
             position: Vec3::new(0.5, 0.0, 0.5),
@@ -275,62 +252,125 @@ impl TerrainQuad {
 
         Self(v1, v2, v3, v4)
     }
+}
 
-    /// Shifts the quad by the given offset. Returns self for chaining.
-    pub fn shift(mut self, offset: Vec3) -> Self {
-        self.0.position += offset;
-        self.1.position += offset;
-        self.2.position += offset;
-        self.3.position += offset;
+/// A trait that defines the behavior of a terrain polygon, which can be a
+/// triangle or a quad. It provides methods to access the vertices and the
+/// number of triangles it contains.
+pub trait TerrainPoly {
+    /// Gets the vertex at the specified index. Returns `None` if the index is
+    /// out of bounds.
+    ///
+    /// It is assumed there is always [`tri_count()`] + 2 vertices in the
+    /// polygon.
+    fn get_vertex(&self, index: usize) -> Option<TerrainVertex>;
 
-        self
-    }
+    /// Gets a mutable reference to the vertex at the specified index. Returns
+    /// `None` if the index is out of bounds.
+    ///
+    /// It is assumed there is always [`tri_count()`] + 2 vertices in the
+    /// polygon.
+    fn get_vertex_mut(&mut self, index: usize) -> Option<&mut TerrainVertex>;
 
-    /// Rotates the quad by the given rotation, relative to the origin. Returns
-    /// self for chaining.
-    pub fn rotate(mut self, rotation: Quat) -> Self {
-        self.0.position = rotation * self.0.position;
-        self.1.position = rotation * self.1.position;
-        self.2.position = rotation * self.2.position;
-        self.3.position = rotation * self.3.position;
+    /// Returns the number of triangles that this polygon contains.
+    fn tri_count(&self) -> usize;
 
-        self.0.normal = rotation * self.0.normal;
-        self.1.normal = rotation * self.1.normal;
-        self.2.normal = rotation * self.2.normal;
-        self.3.normal = rotation * self.3.normal;
-
-        self
-    }
-
-    /// Scales the quad by the given scale factor, relative to the origin.
-    /// Returns self for chaining.
-    pub fn scale(mut self, scale: Vec3) -> Self {
-        self.0.position *= scale;
-        self.1.position *= scale;
-        self.2.position *= scale;
-        self.3.position *= scale;
-
-        self.0.normal = self.0.normal.normalize();
-        self.1.normal = self.1.normal.normalize();
-        self.2.normal = self.2.normal.normalize();
-        self.3.normal = self.3.normal.normalize();
-
-        self
-    }
-
-    /// Sets the layer of the quad. This is used to determine which texture
+    /// Sets the layer of the polygon. This is used to determine which texture
     /// array layer the quad belongs to.
-    pub fn set_layer(mut self, layer: u32) -> Self {
-        self.0.layer = layer;
-        self.1.layer = layer;
-        self.2.layer = layer;
-        self.3.layer = layer;
-
-        self
+    fn set_layer(&mut self, layer: u32) {
+        for i in 0 .. self.tri_count() + 2 {
+            if let Some(vertex) = self.get_vertex_mut(i) {
+                vertex.layer = layer;
+            }
+        }
     }
 
-    /// Returns an array of the vertices of the quad.
-    fn vertices(&self) -> [TerrainVertex; 4] {
-        [self.0, self.1, self.2, self.3]
+    /// Scales the polygon by the given scale factor, relative to the origin.
+    fn scale(&mut self, scale: Vec3) {
+        for i in 0 .. self.tri_count() + 2 {
+            if let Some(vertex) = self.get_vertex_mut(i) {
+                vertex.position *= scale;
+                vertex.normal = vertex.normal.normalize();
+            }
+        }
+    }
+
+    /// Rotates the polygon by the given rotation, relative to the origin.
+    fn rotate(&mut self, rotation: Quat) {
+        for i in 0 .. self.tri_count() + 2 {
+            if let Some(vertex) = self.get_vertex_mut(i) {
+                vertex.position = rotation * vertex.position;
+                vertex.normal = rotation * vertex.normal;
+            }
+        }
+    }
+
+    /// Shifts the quad by the given offset.
+    fn shift(&mut self, offset: Vec3) {
+        for i in 0 .. self.tri_count() + 2 {
+            if let Some(vertex) = self.get_vertex_mut(i) {
+                vertex.position += offset;
+            }
+        }
+    }
+
+    /// Rotates the UV coordinates of the polygon according to the specified
+    /// [`TileRot`] rotation.
+    fn rotate_uv(&mut self, rotation: TileRot) {
+        for i in 0 .. self.tri_count() + 2 {
+            if let Some(vertex) = self.get_vertex_mut(i) {
+                vertex.uv = rotation.transform_uv(vertex.uv);
+            }
+        }
+    }
+}
+
+impl TerrainPoly for TerrainTriangle {
+    fn get_vertex(&self, index: usize) -> Option<TerrainVertex> {
+        match index {
+            0 => Some(self.0),
+            1 => Some(self.1),
+            2 => Some(self.2),
+            _ => None,
+        }
+    }
+
+    fn get_vertex_mut(&mut self, index: usize) -> Option<&mut TerrainVertex> {
+        match index {
+            0 => Some(&mut self.0),
+            1 => Some(&mut self.1),
+            2 => Some(&mut self.2),
+            _ => None,
+        }
+    }
+
+    fn tri_count(&self) -> usize {
+        1
+    }
+}
+
+impl TerrainPoly for TerrainQuad {
+    fn get_vertex(&self, index: usize) -> Option<TerrainVertex> {
+        match index {
+            0 => Some(self.0),
+            1 => Some(self.1),
+            2 => Some(self.2),
+            3 => Some(self.3),
+            _ => None,
+        }
+    }
+
+    fn get_vertex_mut(&mut self, index: usize) -> Option<&mut TerrainVertex> {
+        match index {
+            0 => Some(&mut self.0),
+            1 => Some(&mut self.1),
+            2 => Some(&mut self.2),
+            3 => Some(&mut self.3),
+            _ => None,
+        }
+    }
+
+    fn tri_count(&self) -> usize {
+        2
     }
 }

@@ -15,6 +15,7 @@
     "Egui",
     "filedrop",
     "Framepace",
+    "renderable",
     "rustyscript",
     "smol",
     "srgb",

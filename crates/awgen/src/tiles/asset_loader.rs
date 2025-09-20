@@ -4,7 +4,7 @@ use bevy::asset::io::Reader;
 use bevy::asset::{AssetLoader, LoadContext};
 use bevy::prelude::*;
 
-use crate::tileset::tileset::{Tileset, TilesetError};
+use crate::tiles::tileset::{Tileset, TilesetError};
 
 /// The asset loader for the Awgen tileset file format.
 #[derive(Debug, Default)]

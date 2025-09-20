@@ -7,12 +7,14 @@ mod asset_loader;
 pub mod builder;
 mod material;
 mod mesh;
+mod tile_rot;
 mod tileset;
 
 pub use material::TilesetMaterial;
-pub use mesh::{TerrainMesh, TerrainQuad, TerrainTriangle, TerrainVertex};
+pub use mesh::{TerrainMesh, TerrainPoly, TerrainQuad, TerrainTriangle};
+pub use tile_rot::TileRot;
 
-use crate::tileset::asset_loader::TilesetAssetLoader;
+use crate::tiles::asset_loader::TilesetAssetLoader;
 
 /// TilesetPlugin is a Bevy plugin that provides tileset functionality. This
 /// includes the loading and processing of texture arrays.

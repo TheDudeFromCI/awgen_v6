@@ -10,10 +10,10 @@ use bevy::render::render_resource::{
     SpecializedMeshPipelineError,
 };
 
-use crate::tileset::mesh::ATTRIBUTE_UV_LAYER;
+use crate::tiles::mesh::ATTRIBUTE_UV_LAYER;
 
 /// The path to the tileset shader.
-pub const TILESET_SHADER_PATH: &str = "embedded://awgen/tileset/shader.wgsl";
+pub const TILESET_SHADER_PATH: &str = "embedded://awgen/tiles/shader.wgsl";
 
 /// TilesetMaterial is a Bevy material that uses a shader to render tilesets.
 #[derive(Debug, Default, Clone, Asset, TypePath, AsBindGroup)]

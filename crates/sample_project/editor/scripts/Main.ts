@@ -9,7 +9,15 @@ export async function main() {
 
     sendPackets(
       new PacketToClient.CreateTileset(
-        ["editor://tiles/grass.png", "editor://tiles/dirt.png"],
+        [
+          "editor://tiles/grass.png",
+          "editor://tiles/dirt.png",
+          "editor://tiles/up.png",
+          "editor://tiles/north.png",
+          "editor://tiles/south.png",
+          "editor://tiles/east.png",
+          "editor://tiles/west.png",
+        ],
         "game://tilesets/terrain.tiles"
       )
     );

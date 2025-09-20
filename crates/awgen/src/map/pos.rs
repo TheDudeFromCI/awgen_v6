@@ -1,0 +1,61 @@
+//! This module implements helper types for working with coordinate positions in
+//! the voxel world.
+
+use core::fmt;
+
+use bevy::prelude::*;
+
+use crate::map::chunk::{CHUNK_SIZE, CHUNK_SIZE_BITS, CHUNK_SIZE_MASK};
+
+/// The position of a block in the world, represented in world-space.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deref, DerefMut)]
+pub struct WorldPos(IVec3);
+
+impl WorldPos {
+    /// Creates a new [`WorldPos`] from the given x, y, and z coordinates.
+    pub fn new(x: i32, y: i32, z: i32) -> Self {
+        WorldPos(IVec3::new(x, y, z))
+    }
+
+    /// Gets the chunk position of this block in the world.
+    pub fn as_chunk_pos(self) -> ChunkPos {
+        ChunkPos(IVec3::new(
+            self.x >> CHUNK_SIZE_BITS,
+            self.y >> CHUNK_SIZE_BITS,
+            self.z >> CHUNK_SIZE_BITS,
+        ))
+    }
+
+    /// Gets the relative position of this block within its chunk.
+    pub fn as_block_pos(self) -> BlockPos {
+        BlockPos(IVec3::new(
+            self.x & CHUNK_SIZE_MASK,
+            self.y & CHUNK_SIZE_MASK,
+            self.z & CHUNK_SIZE_MASK,
+        ))
+    }
+}
+
+/// The position of a chunk in the world, represented in chunk-space.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deref)]
+pub struct ChunkPos(IVec3);
+
+impl fmt::Display for ChunkPos {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "({}, {}, {})", self.x, self.y, self.z)
+    }
+}
+
+/// The position of a block relative to a chunk, represented in block-space.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deref)]
+pub struct BlockPos(IVec3);
+
+impl BlockPos {
+    /// Gets the array index position of this block within a chunk.
+    pub fn as_index(self) -> usize {
+        let x = self.x as usize;
+        let y = self.y as usize;
+        let z = self.z as usize;
+        x + y * CHUNK_SIZE + z * CHUNK_SIZE * CHUNK_SIZE
+    }
+}

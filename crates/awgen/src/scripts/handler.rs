@@ -12,8 +12,8 @@ use smol::future;
 
 use crate::app::ProjectSettings;
 use crate::scripts::PacketIn;
-use crate::tileset::TilesetMaterial;
-use crate::tileset::builder::TilesetBuilderError;
+use crate::tiles::TilesetMaterial;
+use crate::tiles::builder::TilesetBuilderError;
 
 lazy_static! {
     static ref ASSET_PATH_REGEX: Regex =
@@ -180,7 +180,7 @@ fn create_tileset(
     let task = thread_pool.spawn(async move {
         (
             handle,
-            crate::tileset::builder::create_tileset(tile_paths, output_path),
+            crate::tiles::builder::create_tileset(tile_paths, output_path),
         )
     });
     handler.tileset_tasks.push(task);

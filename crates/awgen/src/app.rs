@@ -9,8 +9,9 @@ use bevy::window::{PresentMode, WindowMode};
 use bevy::winit::WinitSettings;
 
 use crate::camera::CameraPlugin;
+use crate::map::{BlockModel, ChunkModelRoot, MapPlugin, QuadFace, VoxelChunk, WorldPos};
 use crate::scripts::{ScriptEnginePlugin, ScriptSockets};
-use crate::tileset::{TerrainMesh, TerrainQuad, TilesetMaterial, TilesetPlugin};
+use crate::tiles::{TileRot, TilesetMaterial, TilesetPlugin};
 use crate::ux::UxPlugin;
 
 /// Settings for initializing the game.
@@ -121,6 +122,7 @@ pub fn run(settings: GameInitSettings, sockets: ScriptSockets) -> AppExit {
             ScriptEnginePlugin::new(sockets),
             CameraPlugin,
             TilesetPlugin,
+            MapPlugin,
             UxPlugin,
         ))
         .add_systems(Startup, setup_scene)
@@ -130,7 +132,6 @@ pub fn run(settings: GameInitSettings, sockets: ScriptSockets) -> AppExit {
 /// Spaces a simple scene with a cube and a light.
 fn setup_scene(
     asset_server: Res<AssetServer>,
-    mut meshes: ResMut<Assets<Mesh>>,
     mut tileset_materials: ResMut<Assets<TilesetMaterial>>,
     mut commands: Commands,
 ) {
@@ -142,55 +143,44 @@ fn setup_scene(
         Transform::from_xyz(4.0, 8.0, 4.0),
     ));
 
-    let mut terrain = TerrainMesh::new();
-
-    // grass plane
-    for x in -2 ..= 2 {
-        for z in -2 ..= 2 {
-            terrain.add_quad(
-                TerrainQuad::unit()
-                    .shift(Vec3::new(x as f32, 0.0, z as f32))
-                    .set_layer(0),
-            );
-        }
-    }
-
-    // dirt cube
-    terrain.add_quad(TerrainQuad::unit().shift(Vec3::Y).set_layer(1));
-    terrain.add_quad(
-        TerrainQuad::unit()
-            .rotate(Quat::from_rotation_x(90f32.to_radians()))
-            .shift(Vec3::new(0.0, 0.5, 0.5))
-            .set_layer(1),
-    );
-    terrain.add_quad(
-        TerrainQuad::unit()
-            .rotate(Quat::from_rotation_x(-90f32.to_radians()))
-            .shift(Vec3::new(0.0, 0.5, -0.5))
-            .set_layer(1),
-    );
-    terrain.add_quad(
-        TerrainQuad::unit()
-            .rotate(Quat::from_rotation_z(-90f32.to_radians()))
-            .shift(Vec3::new(0.5, 0.5, 0.0))
-            .set_layer(1),
-    );
-    terrain.add_quad(
-        TerrainQuad::unit()
-            .rotate(Quat::from_rotation_z(90f32.to_radians()))
-            .shift(Vec3::new(-0.5, 0.5, 0.0))
-            .set_layer(1),
-    );
+    let pos = WorldPos::new(0, 0, 0);
+    let mut chunk = VoxelChunk::new(pos.as_chunk_pos());
+    let mut block = chunk.get_block_mut(pos.as_block_pos());
+    let block_model = block.model_mut();
+    *block_model = BlockModel::Cube {
+        up: Some(QuadFace {
+            tile_index: 2,
+            tile_rot: TileRot::default(),
+        }),
+        north: Some(QuadFace {
+            tile_index: 3,
+            tile_rot: TileRot::default().into_rotated(90.0),
+        }),
+        south: Some(QuadFace {
+            tile_index: 4,
+            tile_rot: TileRot::default().into_rotated(270.0),
+        }),
+        east: Some(QuadFace {
+            tile_index: 5,
+            tile_rot: TileRot::default(),
+        }),
+        west: Some(QuadFace {
+            tile_index: 6,
+            tile_rot: TileRot::default().into_rotated(180.0),
+        }),
+    };
 
     let tileset = asset_server.load("game://tilesets/terrain.tiles");
-
     let tileset_mat = TilesetMaterial {
         texture: tileset,
         alpha_mode: AlphaMode::Opaque,
     };
 
     commands.spawn((
-        Mesh3d(meshes.add(terrain)),
-        MeshMaterial3d(tileset_materials.add(tileset_mat)),
+        chunk,
+        ChunkModelRoot {
+            opaque_material: Some(tileset_materials.add(tileset_mat)),
+            ..default()
+        },
     ));
 }

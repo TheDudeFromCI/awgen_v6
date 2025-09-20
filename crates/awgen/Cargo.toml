@@ -20,3 +20,4 @@ serde = { version = "1.0.219", features = ["derive"] }
 image = "0.25"
 regex = "1.11.1"
 lazy_static = "1.5.0"
+futures = "0.3.31"
