@@ -3,19 +3,19 @@
 use bevy::prelude::*;
 use bevy::tasks::{AsyncComputeTaskPool, Task, block_on};
 
-use crate::map::chunk_model::{ChunkMesh, ChunkModelRoot};
 use crate::map::chunk_table::ChunkTable;
-use crate::map::mesher::build_mesh;
+use crate::map::mesher::{ChunkMesh, build_mesh};
 use crate::map::{ChunkPos, VoxelChunk};
-use crate::tiles::TilesetMaterial;
+use crate::tiles::{ActiveTilesets, TilesetMaterial};
 
 /// This system updates every frame to redraw all chunks that have been marked
 /// for redraw.
 pub(super) fn redraw_chunks(
     mut active_tasks: Local<Vec<Task<(ChunkPos, ChunkMesh)>>>,
     chunk_table: Res<ChunkTable>,
+    active_tilesets: Res<ActiveTilesets>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut chunks: Query<(&mut VoxelChunk, &mut ChunkModelRoot)>,
+    mut chunks: Query<&mut VoxelChunk>,
     mut chunk_models: Query<(&mut Mesh3d, &mut MeshMaterial3d<TilesetMaterial>)>,
     mut commands: Commands,
 ) {
@@ -27,22 +27,21 @@ pub(super) fn redraw_chunks(
             continue;
         };
 
-        let Ok((_, mut model_root)) = chunks.get_mut(chunk_id) else {
+        let Ok(mut chunk) = chunks.get_mut(chunk_id) else {
             continue;
         };
 
-        match (model_root.opaque, chunk_mesh.opaque) {
+        match (chunk.opaque_entity, chunk_mesh.opaque) {
             (None, None) => {}
             (None, Some(mesh)) => {
-                let material = model_root.opaque_material.clone().unwrap_or_default();
                 let entity = commands
                     .spawn((
                         ChildOf(chunk_id),
-                        Mesh3d::from(meshes.add(mesh)),
-                        MeshMaterial3d::from(material),
+                        Mesh3d(meshes.add(mesh)),
+                        MeshMaterial3d(active_tilesets.opaque.clone()),
                     ))
                     .id();
-                model_root.opaque = Some(entity);
+                chunk.opaque_entity = Some(entity);
             }
             (Some(old_entity), None) => {
                 commands.entity(old_entity).despawn();
@@ -56,14 +55,14 @@ pub(super) fn redraw_chunks(
     }
 
     let pool = AsyncComputeTaskPool::get();
-    for (mut chunk, _) in chunks.iter_mut() {
+    for mut chunk in chunks.iter_mut() {
         if !chunk.is_dirty() {
             continue;
         }
         chunk.mark_clean();
 
         let position = chunk.pos();
-        let chunk_model = chunk.get_chunk_model();
+        let chunk_model = chunk.get_models().clone();
         active_tasks.push(pool.spawn(async move { (position, build_mesh(&chunk_model)) }));
     }
 }

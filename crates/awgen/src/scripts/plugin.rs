@@ -44,7 +44,6 @@ fn recv(sockets: Res<ScriptEngine>, mut handler: PacketHandler) {
     handler.check_tasks();
 
     while let Ok(Some(packet)) = sockets.recv() {
-        debug!("Received packet from script engine: {:?}", packet);
         handler.handle(packet);
     }
 }

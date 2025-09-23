@@ -9,9 +9,9 @@ use bevy::window::{PresentMode, WindowMode};
 use bevy::winit::WinitSettings;
 
 use crate::camera::CameraPlugin;
-use crate::map::{BlockModel, ChunkModelRoot, MapPlugin, QuadFace, VoxelChunk, WorldPos};
+use crate::map::MapPlugin;
 use crate::scripts::{ScriptEnginePlugin, ScriptSockets};
-use crate::tiles::{TileRot, TilesetMaterial, TilesetPlugin};
+use crate::tiles::TilesetPlugin;
 use crate::ux::UxPlugin;
 
 /// Settings for initializing the game.
@@ -129,58 +129,13 @@ pub fn run(settings: GameInitSettings, sockets: ScriptSockets) -> AppExit {
         .run()
 }
 
-/// Spaces a simple scene with a cube and a light.
-fn setup_scene(
-    asset_server: Res<AssetServer>,
-    mut tileset_materials: ResMut<Assets<TilesetMaterial>>,
-    mut commands: Commands,
-) {
+/// Spaces a simple scene with a light.
+fn setup_scene(mut commands: Commands) {
     commands.spawn((
         PointLight {
             shadows_enabled: true,
             ..Default::default()
         },
         Transform::from_xyz(4.0, 8.0, 4.0),
-    ));
-
-    let pos = WorldPos::new(0, 0, 0);
-    let mut chunk = VoxelChunk::new(pos.as_chunk_pos());
-    let mut block = chunk.get_block_mut(pos.as_block_pos());
-    let block_model = block.model_mut();
-    *block_model = BlockModel::Cube {
-        up: Some(QuadFace {
-            tile_index: 2,
-            tile_rot: TileRot::default(),
-        }),
-        north: Some(QuadFace {
-            tile_index: 3,
-            tile_rot: TileRot::default().into_rotated(90.0),
-        }),
-        south: Some(QuadFace {
-            tile_index: 4,
-            tile_rot: TileRot::default().into_rotated(270.0),
-        }),
-        east: Some(QuadFace {
-            tile_index: 5,
-            tile_rot: TileRot::default(),
-        }),
-        west: Some(QuadFace {
-            tile_index: 6,
-            tile_rot: TileRot::default().into_rotated(180.0),
-        }),
-    };
-
-    let tileset = asset_server.load("game://tilesets/terrain.tiles");
-    let tileset_mat = TilesetMaterial {
-        texture: tileset,
-        alpha_mode: AlphaMode::Opaque,
-    };
-
-    commands.spawn((
-        chunk,
-        ChunkModelRoot {
-            opaque_material: Some(tileset_materials.add(tileset_mat)),
-            ..default()
-        },
     ));
 }

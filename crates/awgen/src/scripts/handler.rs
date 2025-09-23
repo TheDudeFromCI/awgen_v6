@@ -11,9 +11,10 @@ use regex::Regex;
 use smol::future;
 
 use crate::app::ProjectSettings;
+use crate::map::{BlockModel, ChunkTable, VoxelChunk, WorldPos};
 use crate::scripts::PacketIn;
-use crate::tiles::TilesetMaterial;
 use crate::tiles::builder::TilesetBuilderError;
+use crate::tiles::{ActiveTilesets, TilesetMaterial};
 
 lazy_static! {
     static ref ASSET_PATH_REGEX: Regex =
@@ -42,13 +43,25 @@ pub struct PacketHandler<'w, 's> {
 
     /// The resource containing all tileset materials.
     tileset_materials: ResMut<'w, Assets<TilesetMaterial>>,
+
+    /// The commands to modify the world.
+    commands: Commands<'w, 's>,
+
+    /// The chunk table resource.
+    chunk_table: Res<'w, ChunkTable>,
+
+    /// A query of all voxel chunks.
+    chunks: Query<'w, 's, &'static mut VoxelChunk>,
+
+    /// The resource containing the currently active tilesets.
+    active_tilesets: ResMut<'w, ActiveTilesets>,
 }
 
 impl PacketHandler<'_, '_> {
     /// Processes the given packet from the script engine and executes the
     /// appropriate action based on the packet type.
     pub fn handle(&mut self, packet: PacketIn) {
-        handle(self, packet);
+        let _ = handle(self, packet);
     }
 
     /// Checks all (system local) background tasks that might be running and
@@ -89,21 +102,22 @@ fn check_tasks(handler: &mut PacketHandler) {
 }
 
 /// Handles incoming packets from the script engine.
-fn handle(handler: &mut PacketHandler, packet: PacketIn) {
+fn handle(handler: &mut PacketHandler, packet: PacketIn) -> Result<(), ()> {
     match packet {
         PacketIn::Init { .. } => init(),
         PacketIn::Set { packets } => set(handler, packets),
         PacketIn::Shutdown => shutdown(handler),
-        PacketIn::ImportAsset { file, asset_path } => {
-            let _ = import_asset(handler, file, asset_path);
-        }
+        PacketIn::ImportAsset { file, asset_path } => import_asset(handler, file, asset_path)?,
         PacketIn::CreateTileset {
             tile_paths,
             output_path,
-        } => {
-            let _ = create_tileset(handler, tile_paths, output_path);
-        }
-    }
+        } => create_tileset(handler, tile_paths, output_path)?,
+        PacketIn::SetTilesets {
+            opaque_tileset_path,
+        } => set_tilesets(handler, opaque_tileset_path),
+        PacketIn::SetBlock { pos, model } => set_block(handler, pos, *model),
+    };
+    Ok(())
 }
 
 /// Handles the initialization packet from the script engine.
@@ -115,7 +129,7 @@ fn init() {
 fn set(handler: &mut PacketHandler, packets: Vec<PacketIn>) {
     debug!("Received set packet with {} items.", packets.len());
     for packet in packets {
-        handle(handler, packet);
+        let _ = handle(handler, packet);
     }
 }
 
@@ -234,4 +248,39 @@ fn parse_asset_path(project_folder: &Path, asset_path: &str) -> Result<PathBuf, 
             Err(())
         }
     }
+}
+
+/// Handles the set tilesets packet from the script engine.
+fn set_tilesets(handler: &mut PacketHandler, opaque_tileset_path: String) {
+    info!(
+        "Received set tilesets packet: opaque_tileset_path = {}",
+        opaque_tileset_path
+    );
+
+    handler.active_tilesets.opaque = handler.tileset_materials.add(TilesetMaterial {
+        texture: handler.asset_server.load(&opaque_tileset_path),
+        alpha_mode: AlphaMode::Opaque,
+    });
+}
+
+/// Handles the set block packet from the script engine.
+fn set_block(handler: &mut PacketHandler, pos: WorldPos, model: BlockModel) {
+    let chunk_pos = pos.as_chunk_pos();
+
+    match handler.chunk_table.get_chunk(chunk_pos) {
+        Some(chunk_id) => {
+            if let Ok(mut chunk) = handler.chunks.get_mut(chunk_id) {
+                *chunk.get_models_mut().get_mut(pos) = model;
+            } else {
+                error!("Failed to get chunk at position {chunk_pos} to set block at {pos}");
+            }
+        }
+        None => {
+            let mut chunk = VoxelChunk::new(chunk_pos);
+            *chunk.get_models_mut().get_mut(pos) = model;
+            handler.commands.spawn(chunk);
+
+            info!("Created new chunk at position {chunk_pos}");
+        }
+    };
 }

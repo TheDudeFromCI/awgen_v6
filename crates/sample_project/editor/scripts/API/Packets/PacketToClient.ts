@@ -1,3 +1,6 @@
+import { BlockModel } from "../BlockModel.ts";
+import { WorldPos } from "../Units.ts";
+
 /**
  * A packet that initializes the script engine with a name. This packet should
  * be sent to the client when the script engine is first started to initialize
@@ -10,12 +13,12 @@ export class Init {
   /**
    * The type of the packet, which is always "init" for this packet.
    */
-  readonly type: "init" = "init";
+  public readonly type: "init" = "init";
 
   /**
    * The name of the game.
    */
-  name: string;
+  public name: string;
 
   /**
    * The version of the game engine. This should be an array of three numbers
@@ -23,7 +26,7 @@ export class Init {
    *
    * For example, [1, 0, 0] represents version 1.0.0.
    */
-  version: string;
+  public version: string;
 
   /**
    * Creates a new initialization packet.
@@ -31,7 +34,7 @@ export class Init {
    * @param name The name of the game.
    * @param version The version of the game engine.
    */
-  constructor(name: string, version: string) {
+  public constructor(name: string, version: string) {
     this.name = name;
     this.version = version;
   }
@@ -44,7 +47,7 @@ export class Shutdown {
   /**
    * The type of the packet, which is always "shutdown" for this packet.
    */
-  readonly type: "shutdown" = "shutdown";
+  public readonly type: "shutdown" = "shutdown";
 }
 
 /**
@@ -54,18 +57,18 @@ export class ImportAsset {
   /**
    * The type of the packet, which is always "importAsset" for this packet.
    */
-  readonly type: "importAsset" = "importAsset";
+  public readonly type: "importAsset" = "importAsset";
 
   /**
    * The path of the file that should be imported into the game assets.
    */
-  file: string;
+  public file: string;
 
   /**
    * The path where the asset should be stored in the game assets. This must be
    * a valid asset path.
    */
-  assetPath: string;
+  public assetPath: string;
 
   /**
    * Creates a new import asset packet.
@@ -74,7 +77,7 @@ export class ImportAsset {
    * @param assetPath The path where the asset should be stored in the game
    * assets. This must be a valid asset path.
    */
-  constructor(file: string, assetPath: string) {
+  public constructor(file: string, assetPath: string) {
     this.file = file;
     this.assetPath = assetPath;
   }
@@ -89,7 +92,7 @@ export class CreateTileset {
   /**
    * The type of the packet, which is always "createTileset" for this packet.
    */
-  readonly type: "createTileset" = "createTileset";
+  public readonly type: "createTileset" = "createTileset";
 
   /**
    * The paths of the tiles that should be included in the tileset.
@@ -97,13 +100,13 @@ export class CreateTileset {
    * This should be an array of strings, where each string is a valid asset path
    * to a tile image.
    */
-  tilePaths: string[];
+  public tilePaths: string[];
 
   /**
    * The path where the tileset should be stored in the game assets. This must
    * be a valid asset path.
    */
-  outputPath: string;
+  public outputPath: string;
 
   /**
    * Creates a new create tileset packet.
@@ -112,13 +115,75 @@ export class CreateTileset {
    * @param outputPath The path where the tileset should be stored in the game
    * assets. This must be a valid asset path.
    */
-  constructor(tilePaths: string[], outputPath: string) {
+  public constructor(tilePaths: string[], outputPath: string) {
     this.tilePaths = tilePaths;
     this.outputPath = outputPath;
   }
 }
 
 /**
+ * A packet that contains a request to set the tilesets that should be used for
+ * rendering the game world.
+ */
+export class SetTilesets {
+  /**
+   * The type of the packet, which is always "setTilesets" for this packet.
+   */
+  public readonly type: "setTilesets" = "setTilesets";
+
+  /**
+   * The path to the tileset that should be used for rendering opaque tiles in
+   * the game world.
+   */
+  public opaqueTilesetPath: string;
+
+  /**
+   * Creates a new set tilesets packet.
+   * @param opaqueTilesetPath The path to the tileset that should be used for
+   * rendering opaque tiles in the game world.
+   */
+  public constructor(opaqueTilesetPath: string) {
+    this.opaqueTilesetPath = opaqueTilesetPath;
+  }
+}
+
+/**
+ * A packet that contains a request to set a block in the game world.
+ */
+export class SetBlock {
+  /**
+   * The type of the packet, which is always "setBlock" for this packet.
+   */
+  public readonly type: "setBlock" = "setBlock";
+
+  /**
+   * The position of the block in the game world.
+   */
+  public pos: WorldPos;
+
+  /**
+   * The block model that should be set at the specified position.
+   */
+  public model: BlockModel;
+
+  /**
+   * Creates a new set block packet.
+   * @param position The position of the block in the game world.
+   * @param model The block model that should be set at the specified position.
+   */
+  public constructor(position: WorldPos, model: BlockModel) {
+    this.pos = position;
+    this.model = model;
+  }
+}
+
+/**
  * A union type representing all packets that can be sent to the client.
  */
-export type Any = Init | Shutdown | ImportAsset | CreateTileset;
+export type Any =
+  | Init
+  | Shutdown
+  | ImportAsset
+  | CreateTileset
+  | SetTilesets
+  | SetBlock;

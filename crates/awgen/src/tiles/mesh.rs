@@ -8,8 +8,6 @@ use bevy::prelude::*;
 use bevy::render::mesh::{Indices, MeshVertexAttribute, PrimitiveTopology};
 use bevy::render::render_resource::VertexFormat;
 
-use crate::tiles::TileRot;
-
 /// A vertex attribute that stores the texture coordinates `(x, y)` of a vertex
 /// and the texture array layer it belongs to `(z)`.
 pub const ATTRIBUTE_UV_LAYER: MeshVertexAttribute =
@@ -315,11 +313,11 @@ pub trait TerrainPoly {
     }
 
     /// Rotates the UV coordinates of the polygon according to the specified
-    /// [`TileRot`] rotation.
-    fn rotate_uv(&mut self, rotation: TileRot) {
+    /// rotation matrix.
+    fn rotate_uv(&mut self, rotation: Mat2) {
         for i in 0 .. self.tri_count() + 2 {
             if let Some(vertex) = self.get_vertex_mut(i) {
-                vertex.uv = rotation.transform_uv(vertex.uv);
+                vertex.uv = rotation * vertex.uv;
             }
         }
     }

@@ -7,6 +7,8 @@
 
 use serde::{Deserialize, Serialize};
 
+use crate::map::{BlockModel, WorldPos};
+
 /// The `PacketIn` enum, which is used to represent different types of
 /// incoming packets that may be received from the script engine.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -58,5 +60,20 @@ pub enum PacketIn {
 
         /// The output asset path for the tileset.
         output_path: String,
+    },
+
+    /// Sets the tilesets currently in use for the world.
+    SetTilesets {
+        /// The asset path of the tileset to use for the world.
+        opaque_tileset_path: String,
+    },
+
+    /// Sets the block model at the specified world position.
+    SetBlock {
+        /// The world position.
+        pos: WorldPos,
+
+        /// The block model.
+        model: Box<BlockModel>,
     },
 }

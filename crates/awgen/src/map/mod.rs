@@ -2,20 +2,17 @@
 
 use bevy::prelude::*;
 
-mod block;
 mod chunk;
-mod chunk_model;
 mod chunk_table;
 mod mesher;
 mod model;
 mod pos;
 mod systems;
 
-pub use block::{Block, BlockMut};
-pub use chunk::{CHUNK_SIZE, VoxelChunk, VoxelChunkModel};
-pub use chunk_model::ChunkModelRoot;
-pub use model::{BlockModel, QuadFace};
-pub use pos::{BlockPos, ChunkPos, WorldPos};
+pub use chunk::{CHUNK_SIZE, TOTAL_BLOCKS, VoxelChunk};
+pub use chunk_table::ChunkTable;
+pub use model::BlockModel;
+pub use pos::{ChunkPos, WorldPos};
 
 /// This plugin is responsible for rendering the map in the Awgen application.
 pub struct MapPlugin;

@@ -4,11 +4,12 @@
 use core::fmt;
 
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 
 use crate::map::chunk::{CHUNK_SIZE, CHUNK_SIZE_BITS, CHUNK_SIZE_MASK};
 
 /// The position of a block in the world, represented in world-space.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deref, DerefMut)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deref, DerefMut, Serialize, Deserialize)]
 pub struct WorldPos(IVec3);
 
 impl WorldPos {
@@ -27,8 +28,8 @@ impl WorldPos {
     }
 
     /// Gets the relative position of this block within its chunk.
-    pub fn as_block_pos(self) -> BlockPos {
-        BlockPos(IVec3::new(
+    pub fn as_local_pos(self) -> LocalPos {
+        LocalPos(IVec3::new(
             self.x & CHUNK_SIZE_MASK,
             self.y & CHUNK_SIZE_MASK,
             self.z & CHUNK_SIZE_MASK,
@@ -36,8 +37,14 @@ impl WorldPos {
     }
 }
 
+impl fmt::Display for WorldPos {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "({}, {}, {})", self.x, self.y, self.z)
+    }
+}
+
 /// The position of a chunk in the world, represented in chunk-space.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deref)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deref, Serialize, Deserialize)]
 pub struct ChunkPos(IVec3);
 
 impl fmt::Display for ChunkPos {
@@ -46,16 +53,22 @@ impl fmt::Display for ChunkPos {
     }
 }
 
-/// The position of a block relative to a chunk, represented in block-space.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deref)]
-pub struct BlockPos(IVec3);
+/// The position of a local position within a chunk.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deref, Serialize, Deserialize)]
+pub struct LocalPos(IVec3);
 
-impl BlockPos {
+impl LocalPos {
     /// Gets the array index position of this block within a chunk.
     pub fn as_index(self) -> usize {
         let x = self.x as usize;
         let y = self.y as usize;
         let z = self.z as usize;
         x + y * CHUNK_SIZE + z * CHUNK_SIZE * CHUNK_SIZE
+    }
+}
+
+impl From<WorldPos> for LocalPos {
+    fn from(world_pos: WorldPos) -> Self {
+        world_pos.as_local_pos()
     }
 }
