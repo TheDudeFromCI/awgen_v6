@@ -78,12 +78,13 @@ pub(super) fn on_chunk_spawn(
     let chunk = chunks.get(entity).unwrap();
     let pos = chunk.pos();
 
-    if chunk_table.get_chunk(pos).is_some() {
-        error!("ChunkTable already has a chunk at position {pos}");
-        return;
+    if let Some(existing_chunk) = chunk_table.get_chunk(pos) {
+        if existing_chunk != entity {
+            error!("ChunkTable already has a chunk at position {pos}");
+        }
+    } else {
+        chunk_table.add_chunk(pos, entity);
     }
-
-    chunk_table.add_chunk(pos, entity);
 }
 
 /// This observer is triggered whenever a [`VoxelChunk`] is removed from the

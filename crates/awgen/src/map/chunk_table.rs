@@ -20,12 +20,12 @@ impl ChunkTable {
     }
 
     /// Initializes a chunk at the given position with the given entity.
-    pub(super) fn add_chunk(&mut self, pos: ChunkPos, entity: Entity) {
+    pub fn add_chunk(&mut self, pos: ChunkPos, entity: Entity) {
         self.table.insert(pos, entity);
     }
 
     /// Removes the chunk at the given position.
-    pub(super) fn remove_chunk(&mut self, pos: ChunkPos) {
+    pub fn remove_chunk(&mut self, pos: ChunkPos) {
         self.table.remove(&pos);
     }
 }

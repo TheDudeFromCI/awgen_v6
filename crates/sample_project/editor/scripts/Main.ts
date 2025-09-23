@@ -3,6 +3,7 @@ import * as PacketToClient from "./API/Packets/PacketToClient.ts";
 import { Game } from "./API/Game.ts";
 import { Cube } from "./API/BlockModel.ts";
 import { WorldPos } from "./API/Units.ts";
+import { sleep } from "./API/Utils.ts";
 
 export async function main() {
   Game.once("ready", async () => {
@@ -25,7 +26,6 @@ export async function main() {
       new PacketToClient.SetTilesets("game://tilesets/terrain.tiles")
     );
 
-    let position = [0, 0, 0] as WorldPos;
     let model = new Cube();
     model.up!.tile_index = 0;
     model.north!.tile_index = 1;
@@ -33,12 +33,17 @@ export async function main() {
     model.east!.tile_index = 1;
     model.west!.tile_index = 1;
 
-    sendPackets(new PacketToClient.SetBlock(position, model));
+    let packets = [] as PacketToClient.SetBlock[];
+
+    for (let x = -10; x <= 10; x++) {
+      for (let z = -10; z <= 10; z++) {
+        let position = [x, 0, z] as WorldPos;
+        packets.push(new PacketToClient.SetBlock(position, model));
+      }
+    }
+
+    sendPackets(...packets);
   });
 
   await Game.start("Awgen Game Engine", "0.0.1");
-}
-
-async function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }
