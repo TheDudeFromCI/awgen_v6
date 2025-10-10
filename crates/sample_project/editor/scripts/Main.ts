@@ -27,11 +27,11 @@ export async function main() {
     );
 
     let model = new Cube();
-    model.up!.tile_index = 0;
-    model.north!.tile_index = 1;
-    model.south!.tile_index = 1;
-    model.east!.tile_index = 1;
-    model.west!.tile_index = 1;
+    model.posY.tile_index = 2;
+    model.posZ.tile_index = 3;
+    model.negZ.tile_index = 4;
+    model.posX.tile_index = 5;
+    model.negX.tile_index = 6;
 
     let packets = [] as PacketToClient.SetBlock[];
 

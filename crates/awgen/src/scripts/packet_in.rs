@@ -41,6 +41,16 @@ pub enum PacketIn {
     /// Requests for the app to shutdown safely.
     Shutdown,
 
+    /// A packet that indicates that the script engine has crashed.
+    ///
+    /// This packet should never be sent under normal operation, and is
+    /// generated automatically if the script engine panics or encounters
+    /// an unrecoverable error.
+    Crashed {
+        /// The error message associated with the crash.
+        error: String,
+    },
+
     /// Import an asset file into the project directory.
     ImportAsset {
         /// The OS filepath of the asset file to import.

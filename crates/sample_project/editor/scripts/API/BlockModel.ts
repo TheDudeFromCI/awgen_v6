@@ -61,38 +61,38 @@ export class Cube {
   public readonly type: "cube" = "cube";
 
   /**
-   * The tile face for the top side of the cube, if any.
+   * The tile face for the top side of the cube.
    */
-  public up: TileFace | null = new TileFace();
+  public posY: TileFace = new TileFace();
 
   /**
-   * The tile face for the north side of the cube, if any.
+   * The tile face for the north side of the cube.
    */
-  public north: TileFace | null = new TileFace();
+  public posZ: TileFace = new TileFace();
 
   /**
-   * The tile face for the south side of the cube, if any.
+   * The tile face for the south side of the cube.
    */
-  public south: TileFace | null = new TileFace();
+  public negZ: TileFace = new TileFace();
 
   /**
-   * The tile face for the east side of the cube, if any.
+   * The tile face for the east side of the cube.
    */
-  public east: TileFace | null = new TileFace();
+  public posX: TileFace = new TileFace();
 
   /**
-   * The tile face for the west side of the cube, if any.
+   * The tile face for the west side of the cube.
    */
-  public west: TileFace | null = new TileFace();
+  public negX: TileFace = new TileFace();
 
   /**
    * Creates a new Cube block model and initializes the rotations of its tile
    * faces.
    */
   public constructor() {
-    this.north?.rotateClockwise();
-    this.south?.rotateCounterClockwise();
-    this.west?.rotateClockwise();
-    this.west?.rotateClockwise();
+    this.posX.rotateCounterClockwise();
+    this.negX.rotateClockwise();
+    this.negZ.rotateClockwise();
+    this.negZ.rotateClockwise();
   }
 }

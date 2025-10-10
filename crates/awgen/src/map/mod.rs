@@ -6,12 +6,14 @@ mod chunk;
 mod chunk_table;
 mod mesher;
 mod model;
+mod occlusion;
 mod pos;
 mod systems;
 
 pub use chunk::{CHUNK_SIZE, TOTAL_BLOCKS, VoxelChunk};
 pub use chunk_table::ChunkTable;
 pub use model::BlockModel;
+pub use occlusion::Occlusion;
 pub use pos::{ChunkPos, WorldPos};
 
 /// This plugin is responsible for rendering the map in the Awgen application.

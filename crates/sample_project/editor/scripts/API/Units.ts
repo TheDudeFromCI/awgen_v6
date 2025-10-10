@@ -10,8 +10,8 @@ export type Mat2 = [number, number, number, number];
 
 export namespace Mat2Math {
   export const IDENTITY: Mat2 = [1, 0, 0, 1];
-  export const ROTATE_CW: Mat2 = [0, 1, -1, 0];
-  export const ROTATE_CCW: Mat2 = [0, -1, 1, 0];
+  export const ROTATE_CW: Mat2 = [0, -1, 1, 0];
+  export const ROTATE_CCW: Mat2 = [0, 1, -1, 0];
   export const MIRROR_X: Mat2 = [1, 0, 0, -1];
   export const MIRROR_Y: Mat2 = [-1, 0, 0, 1];
 

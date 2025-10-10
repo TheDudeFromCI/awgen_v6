@@ -125,17 +125,5 @@ pub fn run(settings: GameInitSettings, sockets: ScriptSockets) -> AppExit {
             MapPlugin,
             UxPlugin,
         ))
-        .add_systems(Startup, setup_scene)
         .run()
-}
-
-/// Spaces a simple scene with a light.
-fn setup_scene(mut commands: Commands) {
-    commands.spawn((
-        PointLight {
-            shadows_enabled: true,
-            ..Default::default()
-        },
-        Transform::from_xyz(4.0, 8.0, 4.0),
-    ));
 }

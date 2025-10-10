@@ -5,7 +5,6 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 
-use bevy::log::debug;
 use rustyscript::{Error, Runtime};
 use serde_json::Value;
 use smol::channel::{Receiver, Sender};
@@ -47,8 +46,6 @@ pub fn register(
             if args.is_empty() {
                 return Ok(Value::Null);
             }
-
-            debug!("Sending packets to client: {:?}", args);
 
             let mut packets = vec![];
 

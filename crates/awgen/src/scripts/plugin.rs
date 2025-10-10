@@ -90,6 +90,10 @@ fn handle(world: &mut World, packet: PacketIn) -> Result<(), ()> {
             info!("Shutting down the game engine.");
             world.send_event(AppExit::Success);
         }
+        PacketIn::Crashed { error } => {
+            error!("The script engine has crashed: {}", error);
+            world.send_event(AppExit::from_code(1));
+        }
         PacketIn::ImportAsset { file, asset_path } => {
             info!("Importing file \"{}\" as \"{}\"", file, asset_path);
 

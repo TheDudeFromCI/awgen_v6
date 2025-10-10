@@ -3,8 +3,9 @@
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::map::TOTAL_BLOCKS;
+use crate::map::occlusion::Occluder;
 use crate::map::pos::LocalPos;
+use crate::map::{Occlusion, TOTAL_BLOCKS};
 use crate::tiles::TerrainMesh;
 
 mod cube;
@@ -32,10 +33,18 @@ pub enum BlockModel {
 
 impl BlockModel {
     /// Draws the block into the provided mesh at the specified transform.
-    pub fn draw(&self, mesh: &mut TerrainMesh, transform: Transform) {
+    pub fn draw(&self, mesh: &mut TerrainMesh, transform: Transform, occlusion: Occlusion) {
         match self {
             BlockModel::Empty => {}
-            BlockModel::Cube(cube) => cube.draw(mesh, transform),
+            BlockModel::Cube(cube) => cube.draw(mesh, transform, occlusion),
+        }
+    }
+
+    /// Gets the occluder flags for this block model.
+    pub fn get_occluder_flags(&self) -> Occluder {
+        match self {
+            BlockModel::Empty => Occluder::empty(),
+            BlockModel::Cube(_) => Occluder::all(),
         }
     }
 }

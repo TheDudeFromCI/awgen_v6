@@ -29,9 +29,32 @@ pub fn start_script_engine(
     let thread = std::thread::Builder::new()
         .name("script_engine".to_string())
         .spawn(move || -> Result<(), ScriptEngineError> {
+            let crash_handler = send_to_client.clone();
             let (mut runtime, mod_handle) =
-                prepare_script_engine(&folder, send_to_client, get_from_client, database)?;
-            runtime.call_entrypoint::<Undefined>(&mod_handle, json_args!())?;
+                match prepare_script_engine(&folder, send_to_client, get_from_client, database) {
+                    Ok(a) => a,
+                    Err(err) => {
+                        crash_handler
+                            .send_blocking(PacketIn::Crashed {
+                                error: format!("{err}"),
+                            })
+                            .ok();
+                        return Err(err);
+                    }
+                };
+
+            match runtime.call_entrypoint::<Undefined>(&mod_handle, json_args!()) {
+                Ok(_) => {}
+                Err(err) => {
+                    crash_handler
+                        .send_blocking(PacketIn::Crashed {
+                            error: format!("{err}"),
+                        })
+                        .ok();
+                    return Err(err.into());
+                }
+            };
+
             Ok(())
         })?;
 

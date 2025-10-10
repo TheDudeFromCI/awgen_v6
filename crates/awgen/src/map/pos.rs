@@ -2,6 +2,7 @@
 //! the voxel world.
 
 use core::fmt;
+use std::ops::{Add, Mul};
 
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -43,6 +44,22 @@ impl fmt::Display for WorldPos {
     }
 }
 
+impl Add<WorldPos> for WorldPos {
+    type Output = Self;
+
+    fn add(self, rhs: WorldPos) -> Self::Output {
+        WorldPos(self.0 + rhs.0)
+    }
+}
+
+impl Mul<i32> for WorldPos {
+    type Output = Self;
+
+    fn mul(self, rhs: i32) -> Self::Output {
+        WorldPos(self.0 * rhs)
+    }
+}
+
 /// The position of a chunk in the world, represented in chunk-space.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deref, Serialize, Deserialize)]
 pub struct ChunkPos(IVec3);
@@ -70,5 +87,61 @@ impl LocalPos {
 impl From<WorldPos> for LocalPos {
     fn from(world_pos: WorldPos) -> Self {
         world_pos.as_local_pos()
+    }
+}
+
+impl<P: Into<LocalPos>> Add<P> for LocalPos {
+    type Output = Self;
+
+    fn add(self, rhs: P) -> Self::Output {
+        let mut vec = self.0 + rhs.into().0;
+        vec.x &= CHUNK_SIZE_MASK;
+        vec.y &= CHUNK_SIZE_MASK;
+        vec.z &= CHUNK_SIZE_MASK;
+        LocalPos(vec)
+    }
+}
+
+/// A cardinal unit direction vector in 3D space.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct Dir(IVec3);
+
+impl Dir {
+    /// The positive Y direction (0, 1, 0).
+    pub const POS_Y: Self = Self(IVec3::new(0, 1, 0));
+
+    /// The negative Y direction (0, -1, 0).
+    pub const NEG_Y: Self = Self(IVec3::new(0, -1, 0));
+
+    /// The positive X direction (1, 0, 0).
+    pub const POS_X: Self = Self(IVec3::new(1, 0, 0));
+
+    /// The negative X direction (-1, 0, 0).
+    pub const NEG_X: Self = Self(IVec3::new(-1, 0, 0));
+
+    /// The positive Z direction (0, 0, 1).
+    pub const POS_Z: Self = Self(IVec3::new(0, 0, 1));
+
+    /// The negative Z direction (0, 0, -1).
+    pub const NEG_Z: Self = Self(IVec3::new(0, 0, -1));
+}
+
+impl From<Dir> for LocalPos {
+    fn from(dir: Dir) -> Self {
+        LocalPos(dir.0)
+    }
+}
+
+impl From<Dir> for WorldPos {
+    fn from(dir: Dir) -> Self {
+        WorldPos(dir.0)
+    }
+}
+
+impl Mul<i32> for Dir {
+    type Output = WorldPos;
+
+    fn mul(self, rhs: i32) -> Self::Output {
+        WorldPos(self.0 * rhs)
     }
 }
