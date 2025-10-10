@@ -60,14 +60,14 @@ fn recv(world: &mut World) {
 
 /// Cleans up the script engine sockets when the application exits, joining the
 /// thread and handling any errors that may occur during shutdown.
-fn cleanup(mut app_exit: ResMut<Events<AppExit>>, mut sockets: ResMut<ScriptEngine>) {
+fn cleanup(mut app_exit: ResMut<Messages<AppExit>>, mut sockets: ResMut<ScriptEngine>) {
     if !app_exit.is_empty() {
         info!("Cleaning up script engine sockets.");
 
         sockets.shutdown();
         if let Err(err) = sockets.join() {
             error!("Script engine thread panicked: {}", err);
-            app_exit.send(AppExit::from_code(1));
+            app_exit.write(AppExit::from_code(1));
         }
     }
 }
@@ -88,11 +88,11 @@ fn handle(world: &mut World, packet: PacketIn) -> Result<(), ()> {
         }
         PacketIn::Shutdown => {
             info!("Shutting down the game engine.");
-            world.send_event(AppExit::Success);
+            world.write_message(AppExit::Success);
         }
         PacketIn::Crashed { error } => {
             error!("The script engine has crashed: {}", error);
-            world.send_event(AppExit::from_code(1));
+            world.write_message(AppExit::from_code(1));
         }
         PacketIn::ImportAsset { file, asset_path } => {
             info!("Importing file \"{}\" as \"{}\"", file, asset_path);

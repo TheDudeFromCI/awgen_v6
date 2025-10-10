@@ -112,13 +112,13 @@ pub fn run(settings: GameInitSettings, sockets: ScriptSockets) -> AppExit {
                 })
                 .set(LogPlugin {
                     level: debug_level,
-                    filter: "wgpu=error,naga=warn,calloop=debug,polling=debug".to_string(),
+                    filter: "wgpu=error,naga=warn,calloop=debug,polling=debug,cosmic_text=info"
+                        .to_string(),
                     ..default()
                 })
                 .set(ImagePlugin::default_nearest()),
         )
         .add_plugins((
-            bevy_framepace::FramepacePlugin,
             ScriptEnginePlugin::new(sockets),
             CameraPlugin,
             TilesetPlugin,

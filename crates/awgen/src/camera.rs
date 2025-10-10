@@ -3,8 +3,6 @@
 use bevy::input::keyboard::KeyboardInput;
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;
-use bevy::render::camera::ScalingMode;
-use bevy_framepace::{FramepaceSettings, Limiter};
 
 /// This plugin implements camera functionality to the game engine.
 pub struct CameraPlugin;
@@ -202,11 +200,8 @@ impl CameraController {
     }
 }
 
-/// Creates the main camera on startup. This system also sets the default
-/// framerate limit  to 60 FPS.
-fn setup_camera(mut framepace_settings: ResMut<FramepaceSettings>, mut commands: Commands) {
-    framepace_settings.limiter = Limiter::from_framerate(60.0);
-
+/// Creates the main camera on startup.
+fn setup_camera(mut commands: Commands) {
     commands.spawn((
         Camera3d::default(),
         CameraController::default(),
@@ -214,7 +209,7 @@ fn setup_camera(mut framepace_settings: ResMut<FramepaceSettings>, mut commands:
         Projection::Orthographic(OrthographicProjection {
             near: -1000.0,
             far: 1000.0,
-            scaling_mode: ScalingMode::FixedVertical {
+            scaling_mode: bevy::camera::ScalingMode::FixedVertical {
                 viewport_height: 1.0,
             },
             scale: 1.0,
@@ -245,7 +240,7 @@ fn lerp_camera(
 /// Rotates the camera direction based on keyboard input.
 fn rotate_camera(
     mut camera_controllers: Query<&mut CameraController>,
-    mut key_presses: EventReader<KeyboardInput>,
+    mut key_presses: MessageReader<KeyboardInput>,
 ) {
     for key_ev in key_presses.read() {
         if !key_ev.state.is_pressed() {
@@ -273,7 +268,7 @@ fn rotate_camera(
 /// Zooms the camera in and out based on mouse wheel input.
 fn zoom_camera_mouse(
     mut camera_controllers: Query<&mut CameraController>,
-    mut scroll: EventReader<MouseWheel>,
+    mut scroll: MessageReader<MouseWheel>,
 ) {
     let delta = scroll.read().map(|e| e.y).sum::<f32>();
     for mut controller in camera_controllers.iter_mut() {

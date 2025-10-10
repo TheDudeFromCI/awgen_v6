@@ -4,8 +4,8 @@
 use std::ops::Mul;
 
 use bevy::asset::RenderAssetUsages;
+use bevy::mesh::{Indices, MeshVertexAttribute, PrimitiveTopology};
 use bevy::prelude::*;
-use bevy::render::mesh::{Indices, MeshVertexAttribute, PrimitiveTopology};
 use bevy::render::render_resource::VertexFormat;
 
 /// A vertex attribute that stores the texture coordinates `(x, y)` of a vertex
@@ -83,7 +83,7 @@ impl TerrainMesh {
     /// Appends the mesh data from another mesh to this mesh.
     pub fn append(&mut self, other: &Self, transform: Transform) {
         let offset = self.positions.len() as u32;
-        let matrix = transform.compute_matrix();
+        let matrix = transform.to_matrix();
 
         self.positions.reserve(other.positions.len());
         for position in &other.positions {
@@ -198,7 +198,7 @@ impl Mul<TerrainVertex> for Transform {
     type Output = TerrainVertex;
 
     fn mul(self, rhs: TerrainVertex) -> Self::Output {
-        self.compute_matrix() * rhs
+        self.to_matrix() * rhs
     }
 }
 

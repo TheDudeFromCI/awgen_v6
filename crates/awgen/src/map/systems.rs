@@ -70,11 +70,11 @@ pub(super) fn redraw_chunks(
 /// This observer is triggered whenever a new [`VoxelChunk`] is added to the
 /// world, and adds it to the [`ChunkTable`].
 pub(super) fn on_chunk_spawn(
-    trigger: Trigger<OnAdd, VoxelChunk>,
+    trigger: On<Add, VoxelChunk>,
     chunks: Query<&VoxelChunk>,
     mut chunk_table: ResMut<ChunkTable>,
 ) {
-    let entity = trigger.target();
+    let entity = trigger.event().entity;
     let chunk = chunks.get(entity).unwrap();
     let pos = chunk.pos();
 
@@ -90,11 +90,11 @@ pub(super) fn on_chunk_spawn(
 /// This observer is triggered whenever a [`VoxelChunk`] is removed from the
 /// world, and removes it from the [`ChunkTable`].
 pub(super) fn on_chunk_despawn(
-    trigger: Trigger<OnRemove, VoxelChunk>,
+    trigger: On<Remove, VoxelChunk>,
     chunks: Query<&VoxelChunk>,
     mut chunk_table: ResMut<ChunkTable>,
 ) {
-    let entity = trigger.target();
+    let entity = trigger.event().entity;
     let chunk = chunks.get(entity).unwrap();
     let pos = chunk.pos();
     chunk_table.remove_chunk(pos);

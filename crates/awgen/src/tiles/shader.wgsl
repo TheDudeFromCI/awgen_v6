@@ -23,8 +23,8 @@ struct FragmentOutput {
     @location(0) color: vec4<f32>,
 };
 
-@group(2) @binding(0) var texture: texture_2d_array<f32>;
-@group(2) @binding(1) var texture_sampler: sampler;
+@group(#{MATERIAL_BIND_GROUP}) @binding(0) var texture: texture_2d_array<f32>;
+@group(#{MATERIAL_BIND_GROUP}) @binding(1) var texture_sampler: sampler;
 
 @vertex
 fn vertex(input: VertexInput) -> VertexOutput {

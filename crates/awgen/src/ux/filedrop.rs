@@ -7,7 +7,7 @@ use crate::scripts::{PacketOut, ScriptEngine};
 /// Handles file drop events for Awgen, forwarding the event to the script
 /// engine.
 pub(super) fn handle_file_drop(
-    mut file_drop_evs: EventReader<FileDragAndDrop>,
+    mut file_drop_evs: MessageReader<FileDragAndDrop>,
     sockets: Res<ScriptEngine>,
 ) {
     for ev in file_drop_evs.read() {

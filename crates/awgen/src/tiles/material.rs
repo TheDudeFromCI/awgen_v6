@@ -1,14 +1,14 @@
 //! This module implements a material that is capable of rendering tilesets.
 
+use bevy::mesh::MeshVertexBufferLayoutRef;
 use bevy::pbr::{MaterialPipeline, MaterialPipelineKey};
 use bevy::prelude::*;
-use bevy::render::mesh::MeshVertexBufferLayoutRef;
 use bevy::render::render_resource::{
     AsBindGroup,
     RenderPipelineDescriptor,
-    ShaderRef,
     SpecializedMeshPipelineError,
 };
+use bevy::shader::ShaderRef;
 
 use crate::tiles::mesh::ATTRIBUTE_UV_LAYER;
 
@@ -49,7 +49,7 @@ impl Material for TilesetMaterial {
     }
 
     fn specialize(
-        _pipeline: &MaterialPipeline<Self>,
+        _pipeline: &MaterialPipeline,
         descriptor: &mut RenderPipelineDescriptor,
         layout: &MeshVertexBufferLayoutRef,
         _key: MaterialPipelineKey<Self>,
