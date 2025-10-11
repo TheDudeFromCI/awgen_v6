@@ -8,26 +8,26 @@ use bevy::prelude::*;
 pub struct CameraPlugin;
 impl Plugin for CameraPlugin {
     fn build(&self, app_: &mut App) {
-        app_.add_systems(Startup, setup_camera.in_set(CameraSystemSet::Setup))
+        app_.add_systems(Startup, setup_camera.in_set(CameraSystems::Setup))
             .add_systems(
                 Update,
                 (
-                    lerp_camera.in_set(CameraSystemSet::UpdatePosition),
-                    rotate_camera.in_set(CameraSystemSet::Controls),
-                    zoom_camera_mouse.in_set(CameraSystemSet::Controls),
-                    pan_camera_mouse.in_set(CameraSystemSet::Controls),
+                    lerp_camera.in_set(CameraSystems::UpdatePosition),
+                    rotate_camera.in_set(CameraSystems::Controls),
+                    zoom_camera_mouse.in_set(CameraSystems::Controls),
+                    pan_camera_mouse.in_set(CameraSystems::Controls),
                 ),
             )
             .configure_sets(
                 Update,
-                CameraSystemSet::Controls.before(CameraSystemSet::UpdatePosition),
+                CameraSystems::Controls.before(CameraSystems::UpdatePosition),
             );
     }
 }
 
 /// The system sets for the camera plugin.
 #[derive(Debug, Hash, PartialEq, Eq, Clone, Copy, SystemSet)]
-pub enum CameraSystemSet {
+pub enum CameraSystems {
     /// The system set for the camera setup.
     Setup,
 

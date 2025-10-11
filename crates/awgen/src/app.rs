@@ -8,11 +8,10 @@ use bevy::prelude::*;
 use bevy::window::{PresentMode, WindowMode};
 use bevy::winit::WinitSettings;
 
-use crate::camera::CameraPlugin;
 use crate::map::MapPlugin;
 use crate::scripts::{ScriptEnginePlugin, ScriptSockets};
 use crate::tiles::TilesetPlugin;
-use crate::ux::UxPlugin;
+use crate::ux::{CameraPlugin, UxPlugin};
 
 /// Settings for initializing the game.
 #[derive(Debug)]

@@ -2,8 +2,11 @@
 
 use bevy::prelude::*;
 
+mod camera;
 mod diagnostics;
 mod filedrop;
+
+pub use camera::*;
 
 /// The plugin that manages user interface interactions.
 pub struct UxPlugin;
