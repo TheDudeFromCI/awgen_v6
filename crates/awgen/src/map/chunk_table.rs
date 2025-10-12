@@ -28,4 +28,9 @@ impl ChunkTable {
     pub fn remove_chunk(&mut self, pos: ChunkPos) {
         self.table.remove(&pos);
     }
+
+    /// Returns the number of chunks currently stored in the table.
+    pub fn len(&self) -> usize {
+        self.table.len()
+    }
 }

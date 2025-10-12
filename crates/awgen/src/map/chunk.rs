@@ -81,3 +81,10 @@ impl VoxelChunk {
         self.dirty = false;
     }
 }
+
+/// A component that stores diagnostic information about a chunk's model.
+#[derive(Debug, Component)]
+pub struct ChunkModelPart {
+    /// The number of triangles in this model part.
+    pub triangles: u32,
+}

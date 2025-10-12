@@ -8,6 +8,25 @@ use bevy::diagnostic::{
 };
 use bevy::prelude::*;
 use bevy::render::diagnostic::RenderDiagnosticsPlugin;
+use lazy_static::lazy_static;
+
+lazy_static! {
+    /// The number of CPU cores on the system.
+    static ref CORE_COUNT: u32 = sys_info::cpu_num().unwrap_or(1);
+
+    /// The CPU frequency in GHz.
+    static ref CPU_FREQUENCY: f32 = sys_info::cpu_speed().unwrap_or(1000) as f32 / 1000.0;
+
+    /// The system OS.
+    static ref OS: String = format!(
+        "{} {}",
+        sys_info::os_type().unwrap_or_else(|_| "Unknown".into()),
+        sys_info::os_release().unwrap_or_else(|_| "Unknown".into())
+    );
+
+    /// The maximum memory in MB.
+    static ref MAX_MEMORY: u64 = sys_info::mem_info().map(|m| m.total / 1024 / 1024).unwrap_or(0);
+}
 
 /// The plugin that adds a diagnostics overlay to the application.
 pub struct DiagnosticsOverlayPlugin;
@@ -113,6 +132,7 @@ fn build_diagnostics_overlay(
         Text::new(compute_text(&diagnostics_store)),
         TextLayout::new_with_justify(Justify::Left),
         TextColor::from(Color::WHITE),
+        TextBackgroundColor(Color::linear_rgba(0.0, 0.0, 0.0, 0.5)),
         TextFont {
             font: diagnostics_overlay.font.clone(),
             font_size: 14.0,
@@ -139,7 +159,24 @@ fn update_text(
 
 /// Builds the diagnostics overlay text from the diagnostics store.
 fn compute_text(store: &Res<DiagnosticsStore>) -> String {
-    let render_times = format!(
+    let system = format!(
+        "System {} / Cpu: {:.1}% ({:.1}x{} Ghz) / Mem: {:.0}/{} MB",
+        &*OS,
+        store
+            .get(&SystemInformationDiagnosticsPlugin::SYSTEM_CPU_USAGE)
+            .and_then(|cpu| cpu.smoothed())
+            .unwrap_or(0.0),
+        &*CPU_FREQUENCY,
+        &*CORE_COUNT,
+        store
+            .get(&SystemInformationDiagnosticsPlugin::PROCESS_MEM_USAGE)
+            .and_then(|memory| memory.smoothed())
+            .map(|mem| mem * 1024.0)
+            .unwrap_or(0.0),
+        &*MAX_MEMORY
+    );
+
+    let fps = format!(
         "FPS: {:.0} avg / {:.0} min / {:.0} max ({:.1}ms)",
         store
             .get(&FrameTimeDiagnosticsPlugin::FPS)
@@ -159,5 +196,24 @@ fn compute_text(store: &Res<DiagnosticsStore>) -> String {
             .unwrap_or(0.0)
     );
 
-    render_times
+    let geometry = format!(
+        "Geometry:\n - Map: {} chunks / {} meshes / {} triangles\n",
+        store
+            .get(&crate::map::CHUNK_COUNT)
+            .and_then(|chunk_count| chunk_count.value())
+            .map(|v| v as u32)
+            .unwrap_or(0),
+        store
+            .get(&crate::map::MESH_COUNT)
+            .and_then(|mesh_count| mesh_count.value())
+            .map(|v| v as u32)
+            .unwrap_or(0),
+        store
+            .get(&crate::map::TRIANGLE_COUNT)
+            .and_then(|triangle_count| triangle_count.value())
+            .map(|v| v as u32)
+            .unwrap_or(0)
+    );
+
+    format!("{system}\n{fps}\n{geometry}")
 }

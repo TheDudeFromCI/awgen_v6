@@ -4,7 +4,9 @@ use bevy::prelude::*;
 
 mod chunk;
 mod chunk_table;
+mod diagnostics;
 mod mesher;
+mod messages;
 mod model;
 mod occlusion;
 mod pos;
@@ -12,6 +14,7 @@ mod systems;
 
 pub use chunk::{CHUNK_SIZE, TOTAL_BLOCKS, VoxelChunk};
 pub use chunk_table::ChunkTable;
+pub use diagnostics::{CHUNK_COUNT, MESH_COUNT, TRIANGLE_COUNT};
 pub use model::BlockModel;
 pub use occlusion::Occlusion;
 pub use pos::{ChunkPos, WorldPos};
@@ -20,7 +23,11 @@ pub use pos::{ChunkPos, WorldPos};
 pub struct MapPlugin;
 impl Plugin for MapPlugin {
     fn build(&self, app_: &mut App) {
-        app_.init_resource::<chunk_table::ChunkTable>()
+        app_.add_plugins(diagnostics::MapDiagnosticsPlugin)
+            .init_resource::<chunk_table::ChunkTable>()
+            .add_message::<messages::ChunkMeshUpdated>()
+            .add_message::<messages::ChunkCreated>()
+            .add_message::<messages::ChunkRemoved>()
             .add_systems(
                 Update,
                 systems::redraw_chunks.in_set(MapSystemSets::RedrawChunks),

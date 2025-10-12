@@ -308,6 +308,7 @@ fn pan_camera_mouse(
             offset *= controller.dist * controller.pan_sensitivity / height;
             offset.y = 0.0;
             controller.target_pos += offset;
+            controller.pos += offset;
         }
     }
 }

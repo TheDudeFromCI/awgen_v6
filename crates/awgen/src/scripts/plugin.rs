@@ -187,8 +187,6 @@ fn handle(world: &mut World, packet: PacketIn) -> Result<(), ()> {
                     world
                         .resource_mut::<ChunkTable>()
                         .add_chunk(chunk_pos, chunk_id);
-
-                    info!("Created new chunk at position {chunk_pos}");
                 }
             };
         }

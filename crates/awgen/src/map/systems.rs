@@ -3,20 +3,28 @@
 use bevy::prelude::*;
 use bevy::tasks::{AsyncComputeTaskPool, Task, block_on};
 
+use crate::map::chunk::ChunkModelPart;
 use crate::map::chunk_table::ChunkTable;
 use crate::map::mesher::{ChunkMesh, build_mesh};
+use crate::map::messages::{ChunkCreated, ChunkMeshUpdated, ChunkRemoved};
 use crate::map::{ChunkPos, VoxelChunk};
 use crate::tiles::{ActiveTilesets, TilesetMaterial};
 
 /// This system updates every frame to redraw all chunks that have been marked
 /// for redraw.
+#[allow(clippy::too_many_arguments)]
 pub(super) fn redraw_chunks(
     mut active_tasks: Local<Vec<Task<(ChunkPos, ChunkMesh)>>>,
     chunk_table: Res<ChunkTable>,
     active_tilesets: Res<ActiveTilesets>,
     mut meshes: ResMut<Assets<Mesh>>,
+    mut mesh_update_msg: MessageWriter<ChunkMeshUpdated>,
     mut chunks: Query<&mut VoxelChunk>,
-    mut chunk_models: Query<(&mut Mesh3d, &mut MeshMaterial3d<TilesetMaterial>)>,
+    mut chunk_models: Query<(
+        &mut Mesh3d,
+        &mut MeshMaterial3d<TilesetMaterial>,
+        &mut ChunkModelPart,
+    )>,
     mut commands: Commands,
 ) {
     // Wait on all pending redraw tasks to avoid flickering.
@@ -31,27 +39,45 @@ pub(super) fn redraw_chunks(
             continue;
         };
 
+        // opaque mesh
         match (chunk.opaque_entity, chunk_mesh.opaque) {
             (None, None) => {}
             (None, Some(mesh)) => {
+                let triangle_count = mesh
+                    .indices()
+                    .map(|indices| indices.len() as u32 / 3)
+                    .unwrap_or(0);
+
                 let entity = commands
                     .spawn((
                         ChildOf(chunk_id),
                         Mesh3d(meshes.add(mesh)),
                         MeshMaterial3d(active_tilesets.opaque.clone()),
+                        ChunkModelPart {
+                            triangles: triangle_count,
+                        },
                     ))
                     .id();
+
                 chunk.opaque_entity = Some(entity);
             }
             (Some(old_entity), None) => {
                 commands.entity(old_entity).despawn();
             }
             (Some(old_entity), Some(mesh)) => {
-                if let Ok((mut mesh_handle, _)) = chunk_models.get_mut(old_entity) {
+                let triangle_count = mesh
+                    .indices()
+                    .map(|indices| indices.len() as u32 / 3)
+                    .unwrap_or(0);
+
+                if let Ok((mut mesh_handle, _, mut model_part)) = chunk_models.get_mut(old_entity) {
                     *mesh_handle = Mesh3d::from(meshes.add(mesh));
+                    model_part.triangles = triangle_count;
                 }
             }
         }
+
+        mesh_update_msg.write(ChunkMeshUpdated);
     }
 
     let pool = AsyncComputeTaskPool::get();
@@ -72,6 +98,7 @@ pub(super) fn redraw_chunks(
 pub(super) fn on_chunk_spawn(
     trigger: On<Add, VoxelChunk>,
     chunks: Query<&VoxelChunk>,
+    mut chunk_created_msg: MessageWriter<ChunkCreated>,
     mut chunk_table: ResMut<ChunkTable>,
 ) {
     let entity = trigger.event().entity;
@@ -83,7 +110,9 @@ pub(super) fn on_chunk_spawn(
             error!("ChunkTable already has a chunk at position {pos}");
         }
     } else {
+        debug!("Adding chunk at position {pos}");
         chunk_table.add_chunk(pos, entity);
+        chunk_created_msg.write(ChunkCreated);
     }
 }
 
@@ -92,10 +121,14 @@ pub(super) fn on_chunk_spawn(
 pub(super) fn on_chunk_despawn(
     trigger: On<Remove, VoxelChunk>,
     chunks: Query<&VoxelChunk>,
+    mut chunk_removed_msg: MessageWriter<ChunkRemoved>,
     mut chunk_table: ResMut<ChunkTable>,
 ) {
     let entity = trigger.event().entity;
     let chunk = chunks.get(entity).unwrap();
     let pos = chunk.pos();
+
+    debug!("Removing chunk at position {pos}");
     chunk_table.remove_chunk(pos);
+    chunk_removed_msg.write(ChunkRemoved);
 }
