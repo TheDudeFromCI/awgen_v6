@@ -11,7 +11,7 @@ use bevy::winit::WinitSettings;
 use crate::map::MapPlugin;
 use crate::scripts::{ScriptEnginePlugin, ScriptSockets};
 use crate::tiles::TilesetPlugin;
-use crate::ux::{CameraPlugin, UxPlugin};
+use crate::ux::UxPlugin;
 
 /// Settings for initializing the game.
 #[derive(Debug)]
@@ -119,7 +119,6 @@ pub fn run(settings: GameInitSettings, sockets: ScriptSockets) -> AppExit {
         )
         .add_plugins((
             ScriptEnginePlugin::new(sockets),
-            CameraPlugin,
             TilesetPlugin,
             MapPlugin,
             UxPlugin,

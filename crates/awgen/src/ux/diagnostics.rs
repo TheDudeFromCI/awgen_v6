@@ -1,5 +1,6 @@
 //! This module implements the diagnostics overlay for the Awgen game engine.
 
+use bevy::camera::visibility::RenderLayers;
 use bevy::diagnostic::{
     DiagnosticsStore,
     EntityCountDiagnosticsPlugin,
@@ -9,6 +10,14 @@ use bevy::diagnostic::{
 use bevy::prelude::*;
 use bevy::render::diagnostic::RenderDiagnosticsPlugin;
 use lazy_static::lazy_static;
+
+use crate::ux::{CameraController, Node3D, OverlayRoot};
+
+/// The length of the axis indicator in the overlay.
+const AXIS_INDICATOR_LEN: f32 = 20.0;
+
+/// The thickness of the axis indicator in the overlay.
+const AXIS_INDICATOR_WIDTH: f32 = 2.0;
 
 lazy_static! {
     /// The number of CPU cores on the system.
@@ -50,6 +59,7 @@ impl Plugin for DiagnosticsOverlayPlugin {
                 update_text
                     .in_set(DiagnosticsOverlaySystems::UpdateText)
                     .run_if(not(resource_changed::<DiagnosticsOverlay>)),
+                update_axis_indicator.in_set(DiagnosticsOverlaySystems::UpdateAxisIndicator),
             ),
         )
         .configure_sets(
@@ -57,6 +67,8 @@ impl Plugin for DiagnosticsOverlayPlugin {
             (
                 DiagnosticsOverlaySystems::BuildUI.after(DiagnosticsOverlaySystems::Toggle),
                 DiagnosticsOverlaySystems::UpdateText.after(DiagnosticsOverlaySystems::Toggle),
+                DiagnosticsOverlaySystems::UpdateAxisIndicator
+                    .after(DiagnosticsOverlaySystems::Toggle),
             ),
         );
     }
@@ -73,6 +85,9 @@ pub enum DiagnosticsOverlaySystems {
 
     /// The system set for updating the diagnostics overlay text.
     UpdateText,
+
+    /// The system set for updating the world axis indicator.
+    UpdateAxisIndicator,
 }
 
 /// The resource which contains the settings for the diagnostics overlay.
@@ -95,9 +110,13 @@ impl Default for DiagnosticsOverlayTimer {
     }
 }
 
-/// A component used to identify the diagnostics overlay UI entity.
+/// A component used to identify a diagnostics overlay UI entity.
 #[derive(Debug, Default, Component)]
-pub struct DiagnosticsOverlayUI;
+pub struct DiagnosticsText;
+
+/// A component used to identify the world axis indicator entity.
+#[derive(Debug, Default, Component)]
+pub struct WorldAxisIndicator;
 
 /// This system toggles the visibility of the diagnostics overlay when the F3
 /// key is pressed.
@@ -113,9 +132,12 @@ fn toggle_diagnostics_overlay(
 /// This system builds or destroys the diagnostics overlay UI based on the
 /// `DiagnosticsOverlay.visible` flag.
 fn build_diagnostics_overlay(
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
     diagnostics_overlay: Res<DiagnosticsOverlay>,
     diagnostics_store: Res<DiagnosticsStore>,
-    overlay_ui: Query<Entity, With<DiagnosticsOverlayUI>>,
+    overlay_ui: Query<Entity, With<DiagnosticsText>>,
+    overlay_root: Query<Entity, With<OverlayRoot>>,
     mut commands: Commands,
 ) {
     // destroy any existing debug overlay
@@ -127,8 +149,60 @@ fn build_diagnostics_overlay(
         return;
     }
 
+    let Ok(overlay_root) = overlay_root.single() else {
+        error!("No OverlayRoot found when trying to build diagnostics overlay");
+        return;
+    };
+
+    let axis_indicator = commands
+        .spawn((
+            WorldAxisIndicator,
+            Transform::default(),
+            InheritedVisibility::default(),
+            children![
+                (
+                    RenderLayers::layer(1),
+                    Mesh3d(meshes.add(Cuboid::new(
+                        AXIS_INDICATOR_LEN,
+                        AXIS_INDICATOR_WIDTH,
+                        AXIS_INDICATOR_WIDTH
+                    ))),
+                    MeshMaterial3d(materials.add(Color::srgb(1.0, 0.0, 0.0))),
+                    Transform::from_translation(Vec3::new(-AXIS_INDICATOR_LEN / 2.0, 0.0, 0.0))
+                ),
+                (
+                    RenderLayers::layer(1),
+                    Mesh3d(meshes.add(Cuboid::new(
+                        AXIS_INDICATOR_WIDTH,
+                        AXIS_INDICATOR_LEN,
+                        AXIS_INDICATOR_WIDTH
+                    ))),
+                    MeshMaterial3d(materials.add(Color::srgb(0.0, 1.0, 0.0))),
+                    Transform::from_translation(Vec3::new(0.0, AXIS_INDICATOR_LEN / 2.0, 0.0))
+                ),
+                (
+                    RenderLayers::layer(1),
+                    Mesh3d(meshes.add(Cuboid::new(
+                        AXIS_INDICATOR_WIDTH,
+                        AXIS_INDICATOR_WIDTH,
+                        AXIS_INDICATOR_LEN
+                    ))),
+                    MeshMaterial3d(materials.add(Color::srgb(0.0, 0.0, 1.0))),
+                    Transform::from_translation(Vec3::new(0.0, 0.0, -AXIS_INDICATOR_LEN / 2.0))
+                ),
+            ],
+        ))
+        .id();
+
     commands.spawn((
-        DiagnosticsOverlayUI,
+        ChildOf(overlay_root),
+        DiagnosticsText,
+        Node {
+            position_type: PositionType::Absolute,
+            top: Val::Px(0.0),
+            left: Val::Px(0.0),
+            ..default()
+        },
         Text::new(compute_text(&diagnostics_store)),
         TextLayout::new_with_justify(Justify::Left),
         TextColor::from(Color::WHITE),
@@ -139,6 +213,22 @@ fn build_diagnostics_overlay(
             ..default()
         },
     ));
+
+    let axis_radius = AXIS_INDICATOR_LEN + 2.0;
+    commands.spawn((
+        ChildOf(overlay_root),
+        DiagnosticsText,
+        Node {
+            position_type: PositionType::Absolute,
+            margin: Val::Auto.into(),
+            width: Val::Px(axis_radius * 2.0),
+            height: Val::Px(axis_radius * 2.0),
+            ..default()
+        },
+        BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.5)),
+        BorderRadius::all(Val::Px(axis_radius)),
+        Node3D(axis_indicator),
+    ));
 }
 
 /// This system updates the diagnostics overlay text each frame.
@@ -146,7 +236,7 @@ fn update_text(
     time: Res<Time>,
     diagnostics_store: Res<DiagnosticsStore>,
     mut timer: ResMut<DiagnosticsOverlayTimer>,
-    mut query: Query<&mut Text, With<DiagnosticsOverlayUI>>,
+    mut query: Query<&mut Text, With<DiagnosticsText>>,
 ) {
     if !timer.0.tick(time.delta()).just_finished() {
         return;
@@ -216,4 +306,25 @@ fn compute_text(store: &Res<DiagnosticsStore>) -> String {
     );
 
     format!("{system}\n{fps}\n{geometry}")
+}
+
+/// This system updates the rotation of the world axis indicator to reflect the
+/// camera's orientation.
+fn update_axis_indicator(
+    camera: Query<&CameraController>,
+    mut indicator: Query<&mut Transform, With<WorldAxisIndicator>>,
+) {
+    let Ok(controller) = camera.single() else {
+        warn_once!("No CameraController found when trying to update world axis indicator");
+        return;
+    };
+
+    for mut transform in indicator.iter_mut() {
+        transform.rotation = Quat::from_euler(
+            EulerRot::XYZ,
+            controller.rot.x.to_radians(),
+            (-controller.rot.y).to_radians(),
+            controller.rot.z.to_radians(),
+        );
+    }
 }

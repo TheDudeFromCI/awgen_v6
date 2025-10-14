@@ -5,9 +5,9 @@ import { Any as PacketFromClient } from "./PacketFromClient.ts";
  * Fetches the next packet from the client.
  * @returns A promise that resolves with the packet data.
  */
-export const fetchPacket =
+export const fetchPacket = () =>
   // @ts-ignore
-  () => rustyscript.async_functions["fetchPacket"]() as PacketFromClient;
+  rustyscript.async_functions["fetchPacket"]() as PacketFromClient;
 
 /**
  * Sends packets to the client.

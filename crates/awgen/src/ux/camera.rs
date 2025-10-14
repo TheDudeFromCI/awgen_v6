@@ -60,21 +60,21 @@ pub struct CameraController {
     /// In most situations, this value should not be modified directly. It is
     /// recommended to modify the `target_pos` instead, letting the camera
     /// smoothly interpolate to the new position.
-    pos: Vec3,
+    pub pos: Vec3,
 
     /// Current rotation of the camera in Euler angles (in radians).
     ///
     /// In most situations, this value should not be modified directly. It is
     /// recommended to modify the `target_rot` instead, letting the camera
     /// smoothly interpolate to the new rotation.
-    rot: Vec3,
+    pub rot: Vec3,
 
     /// Current distance of the camera from the origin.
     ///
     /// In most situations, this value should not be modified directly. It is
     /// recommended to modify the `targetDist` instead, letting the camera
     /// smoothly interpolate to the new distance.
-    dist: f32,
+    pub dist: f32,
 
     /// Smoothing factor for camera position.
     pub pos_smoothing: f32,
@@ -203,6 +203,7 @@ impl CameraController {
 /// Creates the main camera on startup.
 fn setup_camera(mut commands: Commands) {
     commands.spawn((
+        IsDefaultUiCamera,
         Camera3d::default(),
         CameraController::default(),
         Transform::default(),
