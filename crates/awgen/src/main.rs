@@ -84,6 +84,7 @@ fn main() -> AppExit {
         debug: cfg!(debug_assertions),
         vsync: true,
         fullscreen: false,
+        editor: args.editor,
     };
 
     app::run(settings, sockets)

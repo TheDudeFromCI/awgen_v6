@@ -33,6 +33,9 @@ pub struct GameInitSettings {
 
     /// Whether or not to launch the game in fullscreen mode.
     pub fullscreen: bool,
+
+    /// Whether or not to launch the game in editor mode.
+    pub editor: bool,
 }
 
 #[derive(Debug, Resource)]
@@ -46,6 +49,22 @@ impl ProjectSettings {
     pub fn project_folder(&self) -> &Path {
         self.project_folder.as_path()
     }
+}
+
+/// The current state of the Awgen application.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, States)]
+pub enum AwgenState {
+    /// The application is initializing.
+    ///
+    /// Contains a boolean indicating whether initialization is into editor mode
+    /// or not.
+    Init(bool),
+
+    /// The application is running the game.
+    Game,
+
+    /// The application is in editor mode.
+    Editor,
 }
 
 /// Launch a new game window with the Bevy framework, setting up the
@@ -117,11 +136,23 @@ pub fn run(settings: GameInitSettings, sockets: ScriptSockets) -> AppExit {
                 })
                 .set(ImagePlugin::default_nearest()),
         )
+        .insert_state(AwgenState::Init(settings.editor))
         .add_plugins((
             ScriptEnginePlugin::new(sockets),
             TilesetPlugin,
             MapPlugin,
             UxPlugin,
         ))
+        .add_systems(Last, finish_init)
         .run()
+}
+
+/// Finishes initialization and transitions to the next state.
+fn finish_init(state: Res<State<AwgenState>>, mut next_state: ResMut<NextState<AwgenState>>) {
+    match **state {
+        AwgenState::Init(false) => next_state.set(AwgenState::Game),
+        AwgenState::Init(true) => next_state.set(AwgenState::Editor),
+        AwgenState::Game => {}
+        AwgenState::Editor => {}
+    }
 }

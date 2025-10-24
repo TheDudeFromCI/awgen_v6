@@ -4,8 +4,10 @@ use bevy::prelude::*;
 
 mod camera;
 mod diagnostics;
+mod editor;
 mod filedrop;
 mod overlay;
+mod widgets;
 
 pub use camera::CameraController;
 pub use overlay::{Node3D, OverlayRoot};
@@ -18,6 +20,8 @@ impl Plugin for UxPlugin {
             diagnostics::DiagnosticsOverlayPlugin,
             camera::CameraPlugin,
             overlay::OverlayPlugin,
+            widgets::WidgetsPlugin,
+            editor::EditorUXPlugin,
         ))
         .add_systems(Update, filedrop::handle_file_drop);
     }
