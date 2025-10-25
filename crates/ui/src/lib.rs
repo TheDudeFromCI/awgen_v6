@@ -1,4 +1,6 @@
 //! This crate provides common UI widgets for Awgen.
+//!
+//! While designed for Awgen, these widgets can be used in any Bevy application.
 
 use bevy::prelude::*;
 use bevy::ui_widgets::UiWidgetsPlugins;
