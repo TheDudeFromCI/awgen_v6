@@ -1,0 +1,9 @@
+[package]
+name = "awgen_ui"
+description = "UI components for the Awgen game engine."
+version = "0.1.0"
+edition = "2021"
+authors = ["TheDudeFromCI"]
+
+[dependencies]
+bevy = { version = "0.17", features = ["experimental_bevy_ui_widgets"] }

@@ -3,8 +3,8 @@
 use bevy::prelude::*;
 use bevy::ui_widgets::Activate;
 
-use crate::ux::widgets::dropdown::ui::build_menu;
-use crate::ux::widgets::dropdown::{
+use crate::dropdown::ui::build_menu;
+use crate::dropdown::{
     DropdownEntryButton,
     DropdownMenu,
     DropdownMenuButton,

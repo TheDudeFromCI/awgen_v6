@@ -1,10 +1,10 @@
 //! This module implements the toolbar for the editor UX.
 
+use awgen_ui::dropdown::{DropdownMenu, DropdownMenuEntry};
 use bevy::prelude::*;
 
 use crate::app::AwgenState;
 use crate::ux::OverlayRoot;
-use crate::ux::widgets::dropdown::{DropdownMenu, DropdownMenuEntry};
 
 /// Plugin that sets up the editor toolbar.
 pub struct EditorToolbarPlugin;

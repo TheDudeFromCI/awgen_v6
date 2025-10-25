@@ -580,6 +580,7 @@ dependencies = [
 name = "awgen"
 version = "0.1.0"
 dependencies = [
+ "awgen_ui",
  "bevy",
  "bitflags 2.9.4",
  "clap",
@@ -594,6 +595,13 @@ dependencies = [
  "sqlite",
  "sys-info",
  "thiserror 2.0.17",
+]
+
+[[package]]
+name = "awgen_ui"
+version = "0.1.0"
+dependencies = [
+ "bevy",
 ]
 
 [[package]]

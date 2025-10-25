@@ -4,7 +4,7 @@
 use bevy::ecs::relationship::{RelatedSpawnerCommands, Relationship};
 use bevy::prelude::*;
 
-use crate::ux::widgets::dropdown::{
+use crate::dropdown::{
     DropdownEntryButton,
     DropdownMenu,
     DropdownMenuButton,
