@@ -9,14 +9,12 @@ use crate::dropdown::{
     DropdownMenu,
     DropdownMenuButton,
     DropdownMenuEntry,
+    DropdownMenuEntryText,
     DropdownMenuNodes,
 };
 
 /// The size of icons in the dropdown menu.
 const ICON_SIZE: f32 = 32.0;
-
-/// The font used for dropdown text.
-const TEXT_FONT: &str = "editor://fonts/pixel_arial.ttf";
 
 /// The size of dropdown text.
 const TEXT_SIZE: f32 = 16.0;
@@ -40,18 +38,13 @@ const BORDER_COLOR_HIDDEN: Color = Color::srgba(0.94, 0.42, 0.49, 0.0);
 const MENU_ENTRY_SPACING: f32 = 5.0;
 
 /// Builds the UI hierarchy for a dropdown menu.
-pub(super) fn build_menu(
-    asset_server: &Res<AssetServer>,
-    menu_id: Entity,
-    menu: &DropdownMenu,
-    commands: &mut Commands,
-) {
+pub(super) fn build_menu(menu_id: Entity, menu: &DropdownMenu, commands: &mut Commands) {
     let mut menu_nodes = DropdownMenuNodes {
         content_node: Entity::PLACEHOLDER,
     };
 
     commands.entity(menu_id).with_children(|parent| {
-        menu_button(menu_id, asset_server, menu.main_button(), parent);
+        menu_button(menu_id, menu.main_button(), parent);
 
         menu_nodes.content_node = parent
             .spawn(Node {
@@ -65,7 +58,7 @@ pub(super) fn build_menu(
             })
             .with_children(|parent| {
                 for entry in menu.entries() {
-                    menu_entry(menu_id, asset_server, entry, parent);
+                    menu_entry(menu_id, entry, parent);
                 }
             })
             .id();
@@ -77,7 +70,6 @@ pub(super) fn build_menu(
 /// Builds the menu button UI entity.
 fn menu_button<R: Relationship>(
     menu_id: Entity,
-    asset_server: &Res<AssetServer>,
     entry: &DropdownMenuEntry,
     commands: &mut RelatedSpawnerCommands<R>,
 ) -> Entity {
@@ -101,7 +93,7 @@ fn menu_button<R: Relationship>(
             }
 
             if let Some(text) = &entry.text {
-                parent.spawn(menu_text(text, asset_server));
+                parent.spawn(menu_text(text));
             }
         })
         .id()
@@ -110,7 +102,6 @@ fn menu_button<R: Relationship>(
 /// Builds a menu entry UI entity.
 fn menu_entry<R: Relationship>(
     menu_id: Entity,
-    asset_server: &Res<AssetServer>,
     entry: &DropdownMenuEntry,
     commands: &mut RelatedSpawnerCommands<R>,
 ) -> Entity {
@@ -134,7 +125,7 @@ fn menu_entry<R: Relationship>(
             }
 
             if let Some(text) = &entry.text {
-                parent.spawn(menu_text(text, asset_server));
+                parent.spawn(menu_text(text));
             }
         })
         .id()
@@ -153,7 +144,7 @@ fn menu_icon(icon: &Handle<Image>) -> impl Bundle {
 }
 
 /// Builds a menu text UI entity.
-fn menu_text(text: &str, asset_server: &Res<AssetServer>) -> impl Bundle {
+fn menu_text(text: &DropdownMenuEntryText) -> impl Bundle {
     (
         Node {
             height: Val::Px(ICON_SIZE),
@@ -161,9 +152,9 @@ fn menu_text(text: &str, asset_server: &Res<AssetServer>) -> impl Bundle {
             ..default()
         },
         children![(
-            Text::new(text),
+            Text::new(text.content.clone()),
             TextFont {
-                font: asset_server.load(TEXT_FONT),
+                font: text.font.clone(),
                 font_size: TEXT_SIZE,
                 ..default()
             },

@@ -57,7 +57,17 @@ pub struct DropdownMenuEntry {
     pub icon: Option<Handle<Image>>,
 
     /// The text of the entry, if any.
-    pub text: Option<String>,
+    pub text: Option<DropdownMenuEntryText>,
+}
+
+/// The text settings for a dropdown menu entry.
+#[derive(Debug)]
+pub struct DropdownMenuEntryText {
+    /// The text of the dropdown menu entry.
+    pub content: String,
+
+    /// The font used for the text.
+    pub font: Handle<Font>,
 }
 
 /// A component that marks an entity as a dropdown menu button.

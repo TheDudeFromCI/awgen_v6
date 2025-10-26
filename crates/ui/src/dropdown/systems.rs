@@ -15,7 +15,6 @@ use crate::dropdown::{
 /// An observer system that runs when a [`DropdownMenu`] is spawned.
 pub(super) fn on_spawn(
     trigger: On<Add, DropdownMenu>,
-    asset_server: Res<AssetServer>,
     menu: Query<&DropdownMenu>,
     mut commands: Commands,
 ) {
@@ -23,7 +22,7 @@ pub(super) fn on_spawn(
     let menu = menu.get(entity).unwrap();
     debug!("Spawning DropdownMenu: {}", entity);
 
-    build_menu(&asset_server, entity, menu, &mut commands);
+    build_menu(entity, menu, &mut commands);
 }
 
 /// An observer system that runs when a [`DropdownMenuButton`] is clicked.

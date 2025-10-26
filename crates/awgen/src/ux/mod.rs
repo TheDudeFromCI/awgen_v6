@@ -7,10 +7,8 @@ mod camera;
 mod diagnostics;
 mod editor;
 mod filedrop;
-mod overlay;
 
 pub use camera::CameraController;
-pub use overlay::{Node3D, OverlayRoot};
 
 /// The plugin that manages user interface interactions.
 pub struct UxPlugin;
@@ -19,7 +17,6 @@ impl Plugin for UxPlugin {
         app_.add_plugins((
             diagnostics::DiagnosticsOverlayPlugin,
             camera::CameraPlugin,
-            overlay::OverlayPlugin,
             AwgenUiPlugin,
             editor::EditorUXPlugin,
         ))

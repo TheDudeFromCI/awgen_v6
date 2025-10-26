@@ -1,5 +1,6 @@
 //! This module implements the diagnostics overlay for the Awgen game engine.
 
+use awgen_ui::overlay::{Node3D, ScreenAnchor};
 use bevy::camera::visibility::RenderLayers;
 use bevy::diagnostic::{
     DiagnosticsStore,
@@ -11,7 +12,7 @@ use bevy::prelude::*;
 use bevy::render::diagnostic::RenderDiagnosticsPlugin;
 use lazy_static::lazy_static;
 
-use crate::ux::{CameraController, Node3D, OverlayRoot};
+use crate::ux::CameraController;
 
 /// The length of the axis indicator in the overlay.
 const AXIS_INDICATOR_LEN: f32 = 20.0;
@@ -137,7 +138,6 @@ fn build_diagnostics_overlay(
     diagnostics_overlay: Res<DiagnosticsOverlay>,
     diagnostics_store: Res<DiagnosticsStore>,
     overlay_ui: Query<Entity, With<DiagnosticsText>>,
-    overlay_root: Query<Entity, With<OverlayRoot>>,
     mut commands: Commands,
 ) {
     // destroy any existing debug overlay
@@ -148,11 +148,6 @@ fn build_diagnostics_overlay(
     if !diagnostics_overlay.visible {
         return;
     }
-
-    let Ok(overlay_root) = overlay_root.single() else {
-        error!("No OverlayRoot found when trying to build diagnostics overlay");
-        return;
-    };
 
     let axis_indicator = commands
         .spawn((
@@ -195,14 +190,8 @@ fn build_diagnostics_overlay(
         .id();
 
     commands.spawn((
-        ChildOf(overlay_root),
+        ScreenAnchor::TopLeft,
         DiagnosticsText,
-        Node {
-            position_type: PositionType::Absolute,
-            top: Val::Px(0.0),
-            left: Val::Px(0.0),
-            ..default()
-        },
         Text::new(compute_text(&diagnostics_store)),
         TextLayout::new_with_justify(Justify::Left),
         TextColor::from(Color::WHITE),
@@ -216,11 +205,9 @@ fn build_diagnostics_overlay(
 
     let axis_radius = AXIS_INDICATOR_LEN + 2.0;
     commands.spawn((
-        ChildOf(overlay_root),
+        ScreenAnchor::Center,
         DiagnosticsText,
         Node {
-            position_type: PositionType::Absolute,
-            margin: Val::Auto.into(),
             width: Val::Px(axis_radius * 2.0),
             height: Val::Px(axis_radius * 2.0),
             ..default()
