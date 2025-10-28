@@ -19,6 +19,7 @@ impl Plugin for AwgenUiPlugin {
         app_.add_plugins((
             UiWidgetsPlugins,
             overlay::OverlayPlugin,
+            style::StylePlugin,
             dropdown::DropdownPlugin,
         ));
     }
