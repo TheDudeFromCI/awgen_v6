@@ -11,18 +11,19 @@ use crate::dropdown::{
     DropdownMenuNodes,
     DropdownMenuState,
 };
+use crate::style::Style;
 
 /// An observer system that runs when a [`DropdownMenu`] is spawned.
 pub(super) fn on_spawn(
     trigger: On<Add, DropdownMenu>,
-    menu: Query<&DropdownMenu>,
+    menu: Query<(&DropdownMenu, &Style)>,
     mut commands: Commands,
 ) {
     let entity = trigger.entity;
-    let menu = menu.get(entity).unwrap();
+    let (menu, style) = menu.get(entity).unwrap();
     debug!("Spawning DropdownMenu: {}", entity);
 
-    build_menu(entity, menu, &mut commands);
+    build_menu(entity, menu, style, &mut commands);
 }
 
 /// An observer system that runs when a [`DropdownMenuButton`] is clicked.

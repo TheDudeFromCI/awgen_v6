@@ -2,9 +2,11 @@
 
 use bevy::prelude::*;
 
+use crate::style::Style;
+
 /// A dropdown menu component.
 #[derive(Debug, Component)]
-#[require(Node, DropdownMenuState)]
+#[require(Node, DropdownMenuState, Style)]
 pub struct DropdownMenu {
     /// The entries in the dropdown menu.
     ///
@@ -57,17 +59,7 @@ pub struct DropdownMenuEntry {
     pub icon: Option<Handle<Image>>,
 
     /// The text of the entry, if any.
-    pub text: Option<DropdownMenuEntryText>,
-}
-
-/// The text settings for a dropdown menu entry.
-#[derive(Debug)]
-pub struct DropdownMenuEntryText {
-    /// The text of the dropdown menu entry.
-    pub content: String,
-
-    /// The font used for the text.
-    pub font: Handle<Font>,
+    pub text: Option<String>,
 }
 
 /// A component that marks an entity as a dropdown menu button.

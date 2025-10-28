@@ -10,6 +10,7 @@ use bevy::ui_widgets::UiWidgetsPlugins;
 
 pub mod dropdown;
 pub mod overlay;
+pub mod style;
 
 /// A plugin that adds support for common UI widgets.
 pub struct AwgenUiPlugin;

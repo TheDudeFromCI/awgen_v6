@@ -1,6 +1,6 @@
 //! This module implements the toolbar for the editor UX.
 
-use awgen_ui::dropdown::{DropdownMenu, DropdownMenuEntry, DropdownMenuEntryText};
+use awgen_ui::dropdown::{DropdownMenu, DropdownMenuEntry};
 use awgen_ui::overlay::ScreenAnchor;
 use bevy::prelude::*;
 
@@ -38,24 +38,15 @@ fn setup(asset_server: Res<AssetServer>, mut commands: Commands) {
                 vec![
                     DropdownMenuEntry {
                         icon: Some(asset_server.load("editor://icons/settings.png")),
-                        text: Some(DropdownMenuEntryText {
-                            content: "Project".to_string(),
-                            font: asset_server.load("editor://fonts/pixel_arial.ttf"),
-                        }),
+                        text: Some("Project".to_string()),
                     },
                     DropdownMenuEntry {
                         icon: Some(asset_server.load("editor://icons/settings.png")),
-                        text: Some(DropdownMenuEntryText {
-                            content: "Assets".to_string(),
-                            font: asset_server.load("editor://fonts/pixel_arial.ttf"),
-                        }),
+                        text: Some("Assets".to_string()),
                     },
                     DropdownMenuEntry {
                         icon: Some(asset_server.load("editor://icons/settings.png")),
-                        text: Some(DropdownMenuEntryText {
-                            content: "Help".to_string(),
-                            font: asset_server.load("editor://fonts/pixel_arial.ttf"),
-                        }),
+                        text: Some("Help".to_string()),
                     },
                 ],
             ),
@@ -66,10 +57,7 @@ fn setup(asset_server: Res<AssetServer>, mut commands: Commands) {
                 },
                 vec![DropdownMenuEntry {
                     icon: Some(asset_server.load("editor://icons/map.png")),
-                    text: Some(DropdownMenuEntryText {
-                        content: "Open Map".to_string(),
-                        font: asset_server.load("editor://fonts/pixel_arial.ttf"),
-                    }),
+                    text: Some("Open Map".to_string()),
                 }],
             ),
         ],

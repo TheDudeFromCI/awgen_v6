@@ -9,56 +9,43 @@ use crate::dropdown::{
     DropdownMenu,
     DropdownMenuButton,
     DropdownMenuEntry,
-    DropdownMenuEntryText,
     DropdownMenuNodes,
 };
-
-/// The size of icons in the dropdown menu.
-const ICON_SIZE: f32 = 32.0;
-
-/// The size of dropdown text.
-const TEXT_SIZE: f32 = 16.0;
-
-/// The color of dropdown text.
-const TEXT_COLOR: Color = Color::srgb(0.9, 0.9, 0.9);
-
-/// The background color of dropdown buttons.
-const BACKGROUND_COLOR: Color = Color::srgba(0.3, 0.225, 0.225, 1.0);
-
-/// The border color of dropdown buttons.
-const BORDER_COLOR: Color = Color::srgba(0.7, 0.32, 0.39, 1.0);
-
-/// The background color of dropdown buttons with an alpha of 0 (hidden).
-const BACKGROUND_COLOR_HIDDEN: Color = Color::srgba(0.6, 0.45, 0.45, 0.0);
-
-/// The border color of dropdown buttons with an alpha of 0 (hidden).
-const BORDER_COLOR_HIDDEN: Color = Color::srgba(0.94, 0.42, 0.49, 0.0);
-
-/// The number of pixels between menu entries.
-const MENU_ENTRY_SPACING: f32 = 5.0;
+use crate::style::Style;
 
 /// Builds the UI hierarchy for a dropdown menu.
-pub(super) fn build_menu(menu_id: Entity, menu: &DropdownMenu, commands: &mut Commands) {
+pub(super) fn build_menu(
+    menu_id: Entity,
+    menu: &DropdownMenu,
+    style: &Style,
+    commands: &mut Commands,
+) {
     let mut menu_nodes = DropdownMenuNodes {
         content_node: Entity::PLACEHOLDER,
     };
 
     commands.entity(menu_id).with_children(|parent| {
-        menu_button(menu_id, menu.main_button(), parent);
+        menu_button(menu_id, menu.main_button(), style, parent);
 
         menu_nodes.content_node = parent
-            .spawn(Node {
-                position_type: PositionType::Absolute,
-                flex_direction: FlexDirection::Column,
-                row_gap: Val::Px(MENU_ENTRY_SPACING),
-                padding: UiRect::top(Val::Px(MENU_ENTRY_SPACING)),
-                top: Val::Px(ICON_SIZE),
-                display: Display::None,
-                ..default()
-            })
+            .spawn((
+                Node {
+                    position_type: PositionType::Absolute,
+                    flex_direction: FlexDirection::Column,
+                    row_gap: Val::Px(style.dropdown.element_spacing),
+                    padding: style.dropdown.options.padding(),
+                    border: style.dropdown.options.border_thickness(),
+                    top: Val::Px(style.dropdown.icon_size),
+                    display: Display::None,
+                    ..default()
+                },
+                style.dropdown.options.background_color(),
+                style.dropdown.options.border_color(),
+                style.dropdown.options.border_radius(),
+            ))
             .with_children(|parent| {
                 for entry in menu.entries() {
-                    menu_entry(menu_id, entry, parent);
+                    menu_entry(menu_id, style, entry, parent);
                 }
             })
             .id();
@@ -71,6 +58,7 @@ pub(super) fn build_menu(menu_id: Entity, menu: &DropdownMenu, commands: &mut Co
 fn menu_button<R: Relationship>(
     menu_id: Entity,
     entry: &DropdownMenuEntry,
+    style: &Style,
     commands: &mut RelatedSpawnerCommands<R>,
 ) -> Entity {
     commands
@@ -79,21 +67,22 @@ fn menu_button<R: Relationship>(
                 flex_direction: FlexDirection::Row,
                 column_gap: Val::Px(5.0),
                 align_items: AlignItems::Center,
-                border: UiRect::all(Val::Px(2.0)),
+                padding: style.dropdown.button.padding(),
+                border: style.dropdown.button.border_thickness(),
                 ..default()
             },
             DropdownMenuButton { menu: menu_id },
-            BackgroundColor(BACKGROUND_COLOR_HIDDEN),
-            BorderColor::all(BORDER_COLOR_HIDDEN),
-            BorderRadius::all(Val::Px(8.0)),
+            style.dropdown.button.background_color(),
+            style.dropdown.button.border_color(),
+            style.dropdown.button.border_radius(),
         ))
         .with_children(|parent| {
             if let Some(icon) = &entry.icon {
-                parent.spawn(menu_icon(icon));
+                parent.spawn(menu_icon(style, icon));
             }
 
             if let Some(text) = &entry.text {
-                parent.spawn(menu_text(text));
+                parent.spawn(menu_text(style, text.to_string()));
             }
         })
         .id()
@@ -102,6 +91,7 @@ fn menu_button<R: Relationship>(
 /// Builds a menu entry UI entity.
 fn menu_entry<R: Relationship>(
     menu_id: Entity,
+    style: &Style,
     entry: &DropdownMenuEntry,
     commands: &mut RelatedSpawnerCommands<R>,
 ) -> Entity {
@@ -111,32 +101,29 @@ fn menu_entry<R: Relationship>(
                 flex_direction: FlexDirection::Row,
                 column_gap: Val::Px(5.0),
                 align_items: AlignItems::Center,
-                border: UiRect::all(Val::Px(2.0)),
+                height: Val::Px(style.dropdown.icon_size),
                 ..default()
             },
             DropdownEntryButton { menu: menu_id },
-            BackgroundColor(BACKGROUND_COLOR),
-            BorderColor::all(BORDER_COLOR),
-            BorderRadius::all(Val::Px(8.0)),
         ))
         .with_children(|parent| {
             if let Some(icon) = &entry.icon {
-                parent.spawn(menu_icon(icon));
+                parent.spawn(menu_icon(style, icon));
             }
 
             if let Some(text) = &entry.text {
-                parent.spawn(menu_text(text));
+                parent.spawn(menu_text(style, text.to_string()));
             }
         })
         .id()
 }
 
 /// Builds a menu icon UI entity.
-fn menu_icon(icon: &Handle<Image>) -> impl Bundle {
+fn menu_icon(style: &Style, icon: &Handle<Image>) -> impl Bundle {
     (
         Node {
-            width: Val::Px(ICON_SIZE),
-            height: Val::Px(ICON_SIZE),
+            width: Val::Px(style.dropdown.icon_size),
+            height: Val::Px(style.dropdown.icon_size),
             ..default()
         },
         ImageNode::new(icon.clone()),
@@ -144,21 +131,20 @@ fn menu_icon(icon: &Handle<Image>) -> impl Bundle {
 }
 
 /// Builds a menu text UI entity.
-fn menu_text(text: &DropdownMenuEntryText) -> impl Bundle {
+fn menu_text(style: &Style, text: String) -> impl Bundle {
     (
         Node {
-            height: Val::Px(ICON_SIZE),
             align_items: AlignItems::Center,
             ..default()
         },
         children![(
-            Text::new(text.content.clone()),
+            Text::new(text),
             TextFont {
-                font: text.font.clone(),
-                font_size: TEXT_SIZE,
+                font: style.dropdown.font_style.font.clone(),
+                font_size: style.dropdown.font_style.font_size,
                 ..default()
             },
-            TextColor(TEXT_COLOR),
+            TextColor(style.dropdown.font_style.font_color()),
         )],
     )
 }
