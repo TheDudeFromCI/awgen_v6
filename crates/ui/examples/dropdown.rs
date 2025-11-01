@@ -1,14 +1,18 @@
 //! This example shows the dropdown menu component.
 
 use awgen_ui::AwgenUiPlugin;
+use awgen_ui::button::AwgenButton;
 use awgen_ui::dropdown::{DropdownMenu, DropdownMenuEntry};
 use awgen_ui::overlay::ScreenAnchor;
 use awgen_ui::style::{
     BorderStyle,
+    ButtonAlignment,
+    ButtonStyle,
     ColorStyle,
     ContainerStyle,
     DowndownMenuStyle,
     FontStyle,
+    IconPosition,
     Style,
 };
 use bevy::prelude::*;
@@ -27,58 +31,59 @@ fn setup(mut commands: Commands) {
     let black = Color::srgb(0.0, 0.0, 0.0);
     let white = Color::srgb(1.0, 1.0, 1.0);
 
+    let container = ContainerStyle {
+        background: ColorStyle {
+            default: black,
+            hovered: black,
+            pressed: black,
+        },
+        border: BorderStyle {
+            color: ColorStyle {
+                default: white,
+                hovered: white,
+                pressed: white,
+            },
+            thickness: 2.0,
+            radius: 8.0,
+        },
+        padding: 5.0,
+    };
+
+    let font = FontStyle {
+        font: Handle::default(),
+        font_size: 16.0,
+        color: ColorStyle {
+            default: white,
+            hovered: white,
+            pressed: white,
+        },
+    };
+
     let style = Style {
+        button: ButtonStyle {
+            container: container.clone(),
+            font: font.clone(),
+            alignment: ButtonAlignment::Center,
+            icon_position: IconPosition::Left,
+            content_spacing: 5.0,
+        },
         dropdown: DowndownMenuStyle {
-            button: ContainerStyle {
-                background: ColorStyle {
-                    default: black,
-                    hovered: black,
-                    pressed: black,
-                },
-                border: BorderStyle {
-                    color: ColorStyle {
-                        default: white,
-                        hovered: white,
-                        pressed: white,
-                    },
-                    thickness: 2.0,
-                    radius: 8.0,
-                },
-                padding: 5.0,
-            },
-            options: ContainerStyle {
-                background: ColorStyle {
-                    default: black,
-                    hovered: black,
-                    pressed: black,
-                },
-                border: BorderStyle {
-                    color: ColorStyle {
-                        default: white,
-                        hovered: white,
-                        pressed: white,
-                    },
-                    thickness: 2.0,
-                    radius: 8.0,
-                },
-                padding: 5.0,
-            },
-            font_style: FontStyle {
-                font: Handle::default(),
-                font_size: 16.0,
-                color: ColorStyle {
-                    default: white,
-                    hovered: white,
-                    pressed: white,
-                },
-            },
+            button: container.clone(),
+            options: container.clone(),
+            font_style: font.clone(),
             icon_size: 32.0,
             element_spacing: 0.0,
         },
     };
 
     commands.spawn((
-        style,
+        style.clone(),
+        ScreenAnchor::TopCenter,
+        AwgenButton::with_text("Click Me!"),
+    ));
+
+    commands.spawn((
+        style.clone(),
         ScreenAnchor::Center,
         DropdownMenu::new(
             DropdownMenuEntry {

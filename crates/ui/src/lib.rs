@@ -8,9 +8,11 @@
 use bevy::prelude::*;
 use bevy::ui_widgets::UiWidgetsPlugins;
 
+pub mod button;
 pub mod dropdown;
 pub mod overlay;
 pub mod style;
+pub mod tree;
 
 /// A plugin that adds support for common UI widgets.
 pub struct AwgenUiPlugin;
@@ -20,7 +22,9 @@ impl Plugin for AwgenUiPlugin {
             UiWidgetsPlugins,
             overlay::OverlayPlugin,
             style::StylePlugin,
+            button::ButtonPlugin,
             dropdown::DropdownPlugin,
+            tree::TreeViewPlugin,
         ));
     }
 }

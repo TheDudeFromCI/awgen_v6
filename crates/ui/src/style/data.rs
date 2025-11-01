@@ -6,6 +6,9 @@ use bevy::prelude::*;
 /// A component representing the style of a UI element.
 #[derive(Debug, Default, Component, Clone)]
 pub struct Style {
+    /// The style for button widgets.
+    pub button: ButtonStyle,
+
     /// The style for dropdown menus.
     pub dropdown: DowndownMenuStyle,
 }
@@ -97,6 +100,20 @@ impl Default for ContainerStyle {
 }
 
 impl ContainerStyle {
+    /// Returns a bundled node with the container style applied.
+    pub fn bundle(&self, node: Node) -> impl Bundle {
+        (
+            Node {
+                border: self.border_thickness(),
+                padding: self.padding(),
+                ..node
+            },
+            self.background_color(),
+            self.border_color(),
+            self.border_radius(),
+        )
+    }
+
     /// Returns the default background color as a [`BackgroundColor`].
     pub fn background_color(&self) -> BackgroundColor {
         BackgroundColor(self.background.default)
@@ -185,4 +202,96 @@ impl ColorStyle {
             pressed: color,
         }
     }
+}
+
+/// The style properties for a button widget.
+#[derive(Debug, Clone)]
+pub struct ButtonStyle {
+    /// Container style for the button.
+    pub container: ContainerStyle,
+
+    /// Font style for the button text.
+    pub font: FontStyle,
+
+    /// Content alignment within the button.
+    pub alignment: ButtonAlignment,
+
+    /// Position of the icon relative to the text.
+    pub icon_position: IconPosition,
+
+    /// The spacing between content elements (icon and text).
+    pub content_spacing: f32,
+}
+
+impl Default for ButtonStyle {
+    fn default() -> Self {
+        Self {
+            container: Default::default(),
+            font: Default::default(),
+            alignment: Default::default(),
+            icon_position: Default::default(),
+            content_spacing: 5.0,
+        }
+    }
+}
+
+impl ButtonStyle {
+    /// Returns a bundled node with the button style applied.
+    pub fn bundle(&self, node: Node) -> impl Bundle {
+        self.container.bundle(Node {
+            flex_direction: self.flex_direction(),
+            row_gap: self.content_spacing(),
+            align_items: self.align_items(),
+            ..node
+        })
+    }
+
+    /// Returns the alignment for the button content.
+    pub fn align_items(&self) -> AlignItems {
+        match (self.alignment, self.icon_position) {
+            (ButtonAlignment::Left, IconPosition::Left) => AlignItems::FlexStart,
+            (ButtonAlignment::Left, IconPosition::Right) => AlignItems::FlexEnd,
+            (ButtonAlignment::Center, _) => AlignItems::Center,
+            (ButtonAlignment::Right, IconPosition::Left) => AlignItems::FlexEnd,
+            (ButtonAlignment::Right, IconPosition::Right) => AlignItems::FlexStart,
+        }
+    }
+
+    /// Returns the flex direction based on the icon position.
+    pub fn flex_direction(&self) -> FlexDirection {
+        match self.icon_position {
+            IconPosition::Left => FlexDirection::Row,
+            IconPosition::Right => FlexDirection::RowReverse,
+        }
+    }
+
+    /// Returns the content spacing as a [`Val`].
+    pub fn content_spacing(&self) -> Val {
+        Val::Px(self.content_spacing)
+    }
+}
+
+/// Text alignment options for button text.
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum ButtonAlignment {
+    /// Align content to the left.
+    Left,
+
+    /// Align content to the center.
+    #[default]
+    Center,
+
+    /// Align content to the right.
+    Right,
+}
+
+/// Icon position options for button widgets.
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum IconPosition {
+    /// The icon on the left side of the button text, if both are present.
+    #[default]
+    Left,
+
+    /// The icon on the right side of the button text, if both are present.
+    Right,
 }

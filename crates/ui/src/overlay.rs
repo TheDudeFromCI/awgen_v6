@@ -190,7 +190,9 @@ impl ScreenAnchor {
             }
             ScreenAnchor::TopCenter => {
                 node.top = Val::Px(0.0);
-                node.margin = UiRect::AUTO.with_top(node.margin.top);
+                node.margin = UiRect::AUTO
+                    .with_top(node.margin.top)
+                    .with_bottom(node.margin.bottom);
             }
             ScreenAnchor::TopRight => {
                 node.top = Val::Px(0.0);
@@ -198,14 +200,18 @@ impl ScreenAnchor {
             }
             ScreenAnchor::CenterLeft => {
                 node.left = Val::Px(0.0);
-                node.margin = UiRect::AUTO.with_left(node.margin.left);
+                node.margin = UiRect::AUTO
+                    .with_left(node.margin.left)
+                    .with_right(node.margin.right);
             }
             ScreenAnchor::Center => {
                 node.margin = UiRect::AUTO;
             }
             ScreenAnchor::CenterRight => {
                 node.right = Val::Px(0.0);
-                node.margin = UiRect::AUTO.with_right(node.margin.right);
+                node.margin = UiRect::AUTO
+                    .with_right(node.margin.right)
+                    .with_left(node.margin.left);
             }
             ScreenAnchor::BottomLeft => {
                 node.bottom = Val::Px(0.0);
@@ -213,7 +219,9 @@ impl ScreenAnchor {
             }
             ScreenAnchor::BottomCenter => {
                 node.bottom = Val::Px(0.0);
-                node.margin = UiRect::AUTO.with_bottom(node.margin.bottom);
+                node.margin = UiRect::AUTO
+                    .with_bottom(node.margin.bottom)
+                    .with_top(node.margin.top);
             }
             ScreenAnchor::BottomRight => {
                 node.bottom = Val::Px(0.0);
