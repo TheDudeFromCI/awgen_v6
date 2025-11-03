@@ -123,7 +123,7 @@ fn clear_3d_model(trigger: On<Remove, Node3D>, nodes: Query<&Node3D>, mut comman
 /// `Absolute` and set the appropriate margin and top/bottom/left/right values.
 ///
 /// Relative margin values will be preserved.
-#[derive(Debug, Component)]
+#[derive(Debug, Component, Clone, Copy, PartialEq, Eq, Hash)]
 #[component(storage = "SparseSet")]
 #[require(Node)]
 pub enum ScreenAnchor {

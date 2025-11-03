@@ -3,8 +3,11 @@
 use bevy::color::palettes::css::WHITE;
 use bevy::prelude::*;
 
+use crate::overlay::ScreenAnchor;
+
 /// A component representing the style of a UI element.
 #[derive(Debug, Default, Component, Clone)]
+#[require(Node)]
 pub struct Style {
     /// The style for button widgets.
     pub button: ButtonStyle,
@@ -27,9 +30,6 @@ pub struct DowndownMenuStyle {
     /// The style for the text in the dropdown menu.
     pub font_style: FontStyle,
 
-    /// The size of icons in the dropdown menu.
-    pub icon_size: f32,
-
     /// The spacing between elements in the dropdown menu.
     pub element_spacing: f32,
 }
@@ -40,7 +40,6 @@ impl Default for DowndownMenuStyle {
             button: ContainerStyle::default(),
             options: ContainerStyle::default(),
             font_style: FontStyle::default(),
-            icon_size: 32.0,
             element_spacing: 5.0,
         }
     }
@@ -219,6 +218,9 @@ pub struct ButtonStyle {
     /// Position of the icon relative to the text.
     pub icon_position: IconPosition,
 
+    /// The size of icon in the button.
+    pub icon_size: f32,
+
     /// The spacing between content elements (icon and text).
     pub content_spacing: f32,
 }
@@ -230,6 +232,7 @@ impl Default for ButtonStyle {
             font: Default::default(),
             alignment: Default::default(),
             icon_position: Default::default(),
+            icon_size: 32.0,
             content_spacing: 5.0,
         }
     }
@@ -294,4 +297,63 @@ pub enum IconPosition {
 
     /// The icon on the right side of the button text, if both are present.
     Right,
+}
+
+/// Layout options for UI widgets.
+#[derive(Debug, Default, Clone)]
+pub enum WidgetLayout {
+    /// Automatic layout based on content size and parent constraints.
+    #[default]
+    Auto,
+
+    /// A fixed layout with an anchored position, but a dynamic size.
+    Anchored {
+        /// The anchor position.
+        position: ScreenAnchor,
+    },
+
+    /// Fixed layout with absolute position and size.
+    Absolute {
+        /// The anchor position.
+        position: ScreenAnchor,
+
+        /// The size of the widget.
+        size: Val2,
+    },
+
+    /// A fixed widget size, with a relative position within its parent.
+    Relative {
+        /// The size of the widget.
+        size: Val2,
+    },
+}
+
+impl WidgetLayout {
+    /// Applies the layout to the given node and returns the modified node.
+    pub fn apply(&self, mut node: Node) -> Node {
+        match self {
+            WidgetLayout::Auto => {
+                node.position_type = PositionType::Relative;
+                node.width = Val::Auto;
+                node.height = Val::Auto;
+            }
+            WidgetLayout::Anchored { position } => {
+                node.width = Val::Auto;
+                node.height = Val::Auto;
+                position.set_node(&mut node);
+            }
+            WidgetLayout::Absolute { position, size } => {
+                node.width = size.x;
+                node.height = size.y;
+                position.set_node(&mut node);
+            }
+            WidgetLayout::Relative { size } => {
+                node.position_type = PositionType::Relative;
+                node.width = size.x;
+                node.height = size.y;
+            }
+        }
+
+        node
+    }
 }

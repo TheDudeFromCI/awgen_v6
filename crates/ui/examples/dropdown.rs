@@ -1,20 +1,6 @@
 //! This example shows the dropdown menu component.
 
-use awgen_ui::AwgenUiPlugin;
-use awgen_ui::button::AwgenButton;
-use awgen_ui::dropdown::{DropdownMenu, DropdownMenuEntry};
-use awgen_ui::overlay::ScreenAnchor;
-use awgen_ui::style::{
-    BorderStyle,
-    ButtonAlignment,
-    ButtonStyle,
-    ColorStyle,
-    ContainerStyle,
-    DowndownMenuStyle,
-    FontStyle,
-    IconPosition,
-    Style,
-};
+use awgen_ui::prelude::*;
 use bevy::prelude::*;
 
 fn main() {
@@ -59,27 +45,38 @@ fn setup(mut commands: Commands) {
         },
     };
 
+    let button_style = ButtonStyle {
+        container: container.clone(),
+        font: font.clone(),
+        alignment: ButtonAlignment::Center,
+        icon_position: IconPosition::Left,
+        icon_size: 32.0,
+        content_spacing: 5.0,
+    };
+
     let style = Style {
-        button: ButtonStyle {
-            container: container.clone(),
-            font: font.clone(),
-            alignment: ButtonAlignment::Center,
-            icon_position: IconPosition::Left,
-            content_spacing: 5.0,
-        },
+        button: button_style.clone(),
         dropdown: DowndownMenuStyle {
             button: container.clone(),
             options: container.clone(),
             font_style: font.clone(),
-            icon_size: 32.0,
             element_spacing: 0.0,
         },
     };
 
     commands.spawn((
-        style.clone(),
         ScreenAnchor::TopCenter,
-        AwgenButton::with_text("Click Me!"),
+        button(
+            ButtonBuilder::default()
+                .with_layout(WidgetLayout::Anchored {
+                    position: ScreenAnchor::TopCenter,
+                })
+                .with_text("Click Me!")
+                .with_style(button_style.clone()),
+        ),
+        observe(|_: On<Activate>| {
+            info!("Button clicked!");
+        }),
     ));
 
     commands.spawn((

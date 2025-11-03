@@ -9,10 +9,24 @@ use bevy::prelude::*;
 use bevy::ui_widgets::UiWidgetsPlugins;
 
 pub mod button;
+pub mod child_list;
 pub mod dropdown;
 pub mod overlay;
 pub mod style;
 pub mod tree;
+
+/// A prelude module for easy importing of common types.
+pub mod prelude {
+    pub use bevy::ui_widgets::{Activate, observe};
+
+    pub use super::button::*;
+    pub use super::child_list::*;
+    pub use super::dropdown::*;
+    pub use super::overlay::*;
+    pub use super::style::*;
+    pub use super::tree::*;
+    pub use super::*;
+}
 
 /// A plugin that adds support for common UI widgets.
 pub struct AwgenUiPlugin;
@@ -22,9 +36,9 @@ impl Plugin for AwgenUiPlugin {
             UiWidgetsPlugins,
             overlay::OverlayPlugin,
             style::StylePlugin,
-            button::ButtonPlugin,
             dropdown::DropdownPlugin,
             tree::TreeViewPlugin,
-        ));
+        ))
+        .add_observer(child_list::on_spawn);
     }
 }

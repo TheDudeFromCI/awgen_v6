@@ -2,11 +2,14 @@
 
 use bevy::prelude::*;
 
-use crate::style::Style;
+use crate::button::ButtonContent;
 
-/// A tree view component.
-#[derive(Debug, Component)]
-#[require(Node, Style)]
-pub struct TreeView {}
+/// An element in the tree view.
+#[derive(Debug, Clone)]
+pub enum TreeViewElement {
+    /// A folder that can contain other elements.
+    Folder(Vec<TreeViewElement>),
 
-pub struct TreeViewElement {}
+    /// A file represented by a button.
+    File(Box<ButtonContent>),
+}

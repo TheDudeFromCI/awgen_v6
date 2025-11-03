@@ -35,7 +35,7 @@ pub(super) fn build_menu(
                     row_gap: Val::Px(style.dropdown.element_spacing),
                     padding: style.dropdown.options.padding(),
                     border: style.dropdown.options.border_thickness(),
-                    top: Val::Px(style.dropdown.icon_size),
+                    top: Val::Px(style.button.icon_size),
                     display: Display::None,
                     ..default()
                 },
@@ -101,7 +101,7 @@ fn menu_entry<R: Relationship>(
                 flex_direction: FlexDirection::Row,
                 column_gap: Val::Px(5.0),
                 align_items: AlignItems::Center,
-                height: Val::Px(style.dropdown.icon_size),
+                height: Val::Px(style.button.icon_size),
                 ..default()
             },
             DropdownEntryButton { menu: menu_id },
@@ -122,8 +122,8 @@ fn menu_entry<R: Relationship>(
 fn menu_icon(style: &Style, icon: &Handle<Image>) -> impl Bundle {
     (
         Node {
-            width: Val::Px(style.dropdown.icon_size),
-            height: Val::Px(style.dropdown.icon_size),
+            width: Val::Px(style.button.icon_size),
+            height: Val::Px(style.button.icon_size),
             ..default()
         },
         ImageNode::new(icon.clone()),

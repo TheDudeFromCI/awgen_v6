@@ -3,10 +3,10 @@
 use bevy::prelude::*;
 
 mod components;
-mod systems;
 mod ui;
 
 pub use components::*;
+pub use ui::*;
 
 /// A plugin that adds support for tree view widgets.
 pub struct TreeViewPlugin;
