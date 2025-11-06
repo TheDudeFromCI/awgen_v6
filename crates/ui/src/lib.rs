@@ -21,6 +21,7 @@ pub mod util;
 pub mod prelude {
     pub use bevy::ui_widgets::{Activate, observe};
 
+    pub use super::AwgenUiPlugin;
     pub use super::button::*;
     pub use super::color::*;
     pub use super::interaction::*;
@@ -29,7 +30,6 @@ pub mod prelude {
     pub use super::theme::*;
     pub use super::tree::*;
     pub use super::util::*;
-    pub use super::*;
 }
 
 /// A plugin that adds support for common UI widgets.
