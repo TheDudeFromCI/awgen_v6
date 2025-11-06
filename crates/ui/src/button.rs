@@ -4,7 +4,7 @@ use bevy::ecs::relationship::RelatedSpawner;
 use bevy::prelude::*;
 use bevy::ui_widgets::Button;
 
-use crate::color::{InteractiveColor, SmoothColor};
+use crate::color::{InsetBorder, InteractiveColor};
 use crate::prelude::InteractionSender;
 use crate::theme::UiTheme;
 
@@ -61,9 +61,8 @@ pub fn button(builder: ButtonBuilder) -> impl Bundle {
             ..builder.node
         },
         BorderRadius::all(px(builder.theme.button.border_radius)),
-        SmoothColor::<BackgroundColor>::default(),
         InteractiveColor::<BackgroundColor>::from(&builder.theme.button.background_color),
-        SmoothColor::<BorderColor>::default(),
+        InsetBorder::default(),
         InteractiveColor::<BorderColor>::from(&builder.theme.button.border_color),
         InteractionSender,
         Children::spawn(SpawnWith(move |parent: &mut RelatedSpawner<ChildOf>| {
@@ -92,7 +91,6 @@ fn icon(icon: Handle<Image>, theme: &UiTheme) -> impl Bundle {
             ..default()
         },
         ImageNode::new(icon.clone()),
-        SmoothColor::<ImageNode>::default(),
         InteractiveColor::<ImageNode>::from(&theme.icon_color),
     )
 }
@@ -111,7 +109,6 @@ fn text(text: String, theme: &UiTheme) -> impl Bundle {
                 font_size: theme.text.font_size,
                 ..default()
             },
-            SmoothColor::<TextColor>::default(),
             InteractiveColor::<TextColor>::from(&theme.text.color),
         )],
     )

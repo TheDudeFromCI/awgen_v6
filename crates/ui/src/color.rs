@@ -8,6 +8,9 @@ use bevy::prelude::*;
 use crate::prelude::InteractionReceiver;
 use crate::theme::ColorTheme;
 
+/// The strength of the inset effect when a widget is pressed.
+const INSET_STRENGTH: f32 = 0.2;
+
 /// A plugin that adds color interaction support to the UI.
 pub struct ColorPlugin;
 impl Plugin for ColorPlugin {
@@ -15,8 +18,32 @@ impl Plugin for ColorPlugin {
         app_.register_colorable::<BackgroundColor>()
             .register_colorable::<BorderColor>()
             .register_colorable::<TextColor>()
-            .register_colorable::<ImageNode>();
+            .register_colorable::<ImageNode>()
+            .add_systems(
+                Update,
+                on_press_inset_border.in_set(ColorSystems::InsetBorder),
+            )
+            .configure_sets(
+                Update,
+                (
+                    ColorSystems::InteractionChanged.before(ColorSystems::InsetBorder),
+                    ColorSystems::InteractionChanged.before(ColorSystems::SmoothColorAnimation),
+                ),
+            );
     }
+}
+
+/// System sets for color-related systems.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet)]
+pub enum ColorSystems {
+    /// System for handling interaction changes.
+    InteractionChanged,
+
+    /// System for handling inset border changes on press interactions.
+    InsetBorder,
+
+    /// System for updating smooth color transitions.
+    SmoothColorAnimation,
 }
 
 /// Extension trait for registering colorable components.
@@ -36,7 +63,10 @@ impl RegisterColorable for App {
     {
         self.add_systems(
             Update,
-            (on_interaction_changed::<C>, update_smooth_color::<C>).chain(),
+            (
+                on_interaction_changed::<C>.in_set(ColorSystems::InteractionChanged),
+                update_smooth_color::<C>.in_set(ColorSystems::SmoothColorAnimation),
+            ),
         );
         self
     }
@@ -152,6 +182,17 @@ impl Colorable for ImageNode {
     }
 }
 
+/// A marker component indicating that the entity is a widget that can be
+/// pressed in, causing an inset effect on the border. When released, the
+/// provided border color is restored.
+///
+/// If an [`InteractiveColor<BorderColor>`] component is also present, those
+/// color values will be used as the base color. This component is not
+/// compatible with [`SmoothColor<BorderColor>`].
+#[derive(Debug, Default, Component)]
+#[require(BorderColor)]
+pub struct InsetBorder(pub Color);
+
 /// System that updates smooth color transitions.
 fn update_smooth_color<C>(
     time: Res<Time>,
@@ -200,6 +241,48 @@ fn on_interaction_changed<C>(
         match maybe_smooth {
             Some(mut smooth) => smooth.color = Some(color),
             None => colorable.set_color(color),
+        }
+    }
+}
+
+/// System that updates inset border colors on press interactions.
+#[allow(clippy::type_complexity)]
+fn on_press_inset_border(
+    mut query: Query<
+        (
+            &mut BorderColor,
+            &InteractionReceiver,
+            &InsetBorder,
+            Option<&InteractiveColor<BorderColor>>,
+        ),
+        (
+            With<InsetBorder>,
+            Or<(Changed<InteractionReceiver>, Added<InsetBorder>)>,
+        ),
+    >,
+) {
+    for (mut border_color, interaction, inset, maybe_interactive) in query.iter_mut() {
+        let base_color = match (maybe_interactive, interaction) {
+            (Some(interactive), InteractionReceiver::Default) => interactive.default,
+            (Some(interactive), InteractionReceiver::Hovered) => interactive.hovered,
+            (Some(interactive), InteractionReceiver::Pressed) => interactive.pressed,
+            (Some(interactive), InteractionReceiver::Disable) => interactive.disable,
+            _ => inset.0,
+        };
+
+        match interaction {
+            InteractionReceiver::Pressed => {
+                border_color.top = base_color.darker(INSET_STRENGTH);
+                border_color.left = base_color.darker(INSET_STRENGTH);
+                border_color.bottom = base_color.lighter(INSET_STRENGTH);
+                border_color.right = base_color.lighter(INSET_STRENGTH);
+            }
+            _ => {
+                border_color.top = base_color;
+                border_color.left = base_color;
+                border_color.bottom = base_color;
+                border_color.right = base_color;
+            }
         }
     }
 }
