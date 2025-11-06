@@ -1,56 +1,25 @@
 //! This module provides the builder function for the `Button` UI component.
 
-use bevy::picking::hover::Hovered;
+use bevy::ecs::relationship::RelatedSpawner;
 use bevy::prelude::*;
 use bevy::ui_widgets::Button;
 
-use crate::child_list::ChildList;
-use crate::style::{ButtonStyle, FontStyle, WidgetLayout};
+use crate::color::{InteractiveColor, SmoothColor};
+use crate::prelude::InteractionSender;
+use crate::theme::UiTheme;
 
 /// Builder for a button UI component.
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Clone)]
 pub struct ButtonBuilder {
-    /// The layout of the button within its parent container.
-    pub layout: WidgetLayout,
+    /// The default node component, if a custom layout is needed. Some fields
+    /// may be overridden.
+    pub node: Node,
 
     /// The content of the button (icon, label, or both).
     pub content: ButtonContent,
 
-    /// The style of the button.
-    pub style: ButtonStyle,
-}
-
-impl ButtonBuilder {
-    /// Sets the layout of the button.
-    pub fn with_layout(mut self, layout: WidgetLayout) -> Self {
-        self.layout = layout;
-        self
-    }
-
-    /// Sets the text label of the button.
-    pub fn with_text<S: Into<String>>(mut self, text: S) -> Self {
-        let text = text.into();
-        self.content = match self.content {
-            ButtonContent::Icon(icon) => ButtonContent::Both(icon, text),
-            _ => ButtonContent::Label(text),
-        };
-        self
-    }
-
-    /// Sets the icon of the button.
-    pub fn with_icon(mut self, icon: Handle<Image>) -> Self {
-        self.content = match self.content {
-            ButtonContent::Label(label) => ButtonContent::Both(icon, label),
-            _ => ButtonContent::Icon(icon),
-        };
-        self
-    }
-
-    /// Sets the style of the button.
-    pub fn with_style(mut self, style: ButtonStyle) -> Self {
-        self.style = style;
-        self
-    }
+    /// The theme for the button.
+    pub theme: UiTheme,
 }
 
 /// The content of the button.
@@ -72,41 +41,64 @@ impl Default for ButtonContent {
     }
 }
 
+impl ButtonContent {
+    /// Creates a label-only button content.
+    ///
+    /// This is a shortcut for creating a [`ButtonContent::Label`] with a static
+    /// string.
+    pub fn text<S: Into<String>>(text: S) -> Self {
+        ButtonContent::Label(text.into())
+    }
+}
+
 /// Creates a button UI component using the provided builder.
 pub fn button(builder: ButtonBuilder) -> impl Bundle {
     (
-        builder.style.bundle(builder.layout.apply(Node::default())),
         Button,
-        Hovered::default(),
-        ChildList::from(|parent| match builder.content {
-            ButtonContent::Icon(handle) => {
-                parent.add_child(icon(handle, &builder.style));
-            }
-            ButtonContent::Label(string) => {
-                parent.add_child(text(string, &builder.style.font));
-            }
-            ButtonContent::Both(handle, string) => {
-                parent.add_child(icon(handle, &builder.style));
-                parent.add_child(text(string, &builder.style.font));
-            }
-        }),
+        Node {
+            border: UiRect::all(px(builder.theme.button.border_thickness)),
+            padding: UiRect::all(px(builder.theme.button.padding)),
+            ..builder.node
+        },
+        BorderRadius::all(px(builder.theme.button.border_radius)),
+        SmoothColor::<BackgroundColor>::default(),
+        InteractiveColor::<BackgroundColor>::from(&builder.theme.button.background_color),
+        SmoothColor::<BorderColor>::default(),
+        InteractiveColor::<BorderColor>::from(&builder.theme.button.border_color),
+        InteractionSender,
+        Children::spawn(SpawnWith(move |parent: &mut RelatedSpawner<ChildOf>| {
+            match builder.content {
+                ButtonContent::Icon(handle) => {
+                    parent.spawn(icon(handle, &builder.theme));
+                }
+                ButtonContent::Label(string) => {
+                    parent.spawn(text(string, &builder.theme));
+                }
+                ButtonContent::Both(handle, string) => {
+                    parent.spawn(icon(handle, &builder.theme));
+                    parent.spawn(text(string, &builder.theme));
+                }
+            };
+        })),
     )
 }
 
 /// Creates an icon node for the button.
-fn icon(icon: Handle<Image>, style: &ButtonStyle) -> impl Bundle {
+fn icon(icon: Handle<Image>, theme: &UiTheme) -> impl Bundle {
     (
         Node {
-            width: Val::Px(style.icon_size),
-            height: Val::Px(style.icon_size),
+            width: px(theme.icon_size),
+            height: px(theme.icon_size),
             ..default()
         },
         ImageNode::new(icon.clone()),
+        SmoothColor::<ImageNode>::default(),
+        InteractiveColor::<ImageNode>::from(&theme.icon_color),
     )
 }
 
 /// Creates a text node for the button.
-fn text(text: String, style: &FontStyle) -> impl Bundle {
+fn text(text: String, theme: &UiTheme) -> impl Bundle {
     (
         Node {
             align_items: AlignItems::Center,
@@ -115,11 +107,12 @@ fn text(text: String, style: &FontStyle) -> impl Bundle {
         children![(
             Text::new(text),
             TextFont {
-                font: style.font.clone(),
-                font_size: style.font_size,
+                font: theme.text.font.clone(),
+                font_size: theme.text.font_size,
                 ..default()
             },
-            TextColor(style.font_color()),
+            SmoothColor::<TextColor>::default(),
+            InteractiveColor::<TextColor>::from(&theme.text.color),
         )],
     )
 }
