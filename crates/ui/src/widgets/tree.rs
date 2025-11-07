@@ -3,8 +3,8 @@
 use bevy::ecs::relationship::RelatedSpawner;
 use bevy::prelude::*;
 
-use crate::button::{ButtonBuilder, ButtonContent, button};
 use crate::theme::UiTheme;
+use crate::widgets::button::{ButtonBuilder, ButtonContent, button};
 
 /// Builder for a tree view widget.
 #[derive(Debug, Clone)]

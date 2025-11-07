@@ -8,28 +8,27 @@
 use bevy::prelude::*;
 use bevy::ui_widgets::UiWidgetsPlugins;
 
-pub mod button;
 pub mod color;
 pub mod interaction;
-pub mod overlay;
+pub mod menus;
 pub mod scroll;
 pub mod theme;
-pub mod tree;
 pub mod util;
+pub mod widgets;
 
 /// A prelude module for easy importing of common types.
 pub mod prelude {
     pub use bevy::ui_widgets::{Activate, observe};
 
     pub use super::AwgenUiPlugin;
-    pub use super::button::*;
     pub use super::color::*;
     pub use super::interaction::*;
-    pub use super::overlay::*;
+    pub use super::menus::overlay::*;
     pub use super::scroll::*;
     pub use super::theme::*;
-    pub use super::tree::*;
     pub use super::util::*;
+    pub use super::widgets::button::*;
+    pub use super::widgets::tree::*;
 }
 
 /// A plugin that adds support for common UI widgets.
@@ -39,7 +38,7 @@ impl Plugin for AwgenUiPlugin {
         app_.add_plugins((
             UiWidgetsPlugins,
             interaction::InteractionPlugin,
-            overlay::OverlayPlugin,
+            menus::overlay::OverlayPlugin,
             scroll::ScrollPlugin,
             color::ColorPlugin,
         ));
