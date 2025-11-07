@@ -4,7 +4,6 @@ use bevy::ecs::relationship::RelatedSpawner;
 use bevy::prelude::*;
 
 use crate::button::{ButtonBuilder, ButtonContent, button};
-use crate::scroll::SmoothScrollPosition;
 use crate::theme::UiTheme;
 
 /// Builder for a tree view widget.
