@@ -28,7 +28,7 @@ pub mod prelude {
     pub use super::theme::*;
     pub use super::util::*;
     pub use super::widgets::button::*;
-    pub use super::widgets::tree::*;
+    pub use super::widgets::tree_view::*;
 }
 
 /// A plugin that adds support for common UI widgets.
