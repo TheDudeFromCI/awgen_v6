@@ -45,7 +45,7 @@ pub fn tree_view(builder: TreeBuilder) -> impl Bundle {
         BackgroundColor(builder.theme.inner_window.background_color),
         BorderColor::all(builder.theme.inner_window.border_color),
         BorderRadius::all(px(builder.theme.inner_window.border_radius)),
-        SmoothScrollPosition::default(),
+        ScrollPosition::default(),
         Children::spawn(SpawnWith(move |parent: &mut RelatedSpawner<ChildOf>| {
             for node in builder.root_elements {
                 tree_node_recursive(node, parent, &builder.theme, 0.0);
