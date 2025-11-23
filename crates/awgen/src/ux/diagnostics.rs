@@ -1,6 +1,6 @@
 //! This module implements the diagnostics overlay for the Awgen game engine.
 
-use awgen_ui::overlay::{Node3D, ScreenAnchor};
+use awgen_ui::menus::overlay::{Node3D, ScreenAnchor};
 use bevy::camera::visibility::RenderLayers;
 use bevy::diagnostic::{
     DiagnosticsStore,

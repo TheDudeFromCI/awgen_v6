@@ -14,18 +14,16 @@ fn main() {
 }
 
 fn setup(asset_server: Res<AssetServer>, mut commands: Commands) {
+    commands.spawn(Camera2d);
     commands.spawn((
-        Camera2d,
-        (
-            ScreenAnchor::Center,
-            button(ButtonBuilder {
-                node: Node::default(),
-                content: ButtonContent::text("Click Me"),
-                theme: theme::heath_theme(&asset_server),
-            }),
-            observe(|_: On<Activate>| {
-                info!("Button clicked!");
-            }),
-        ),
+        ScreenAnchor::Center,
+        button(ButtonBuilder {
+            node: Node::default(),
+            content: ButtonContent::text("Click Me"),
+            theme: theme::heath_theme(&asset_server),
+        }),
+        observe(|_: On<Activate>| {
+            info!("Button clicked!");
+        }),
     ));
 }

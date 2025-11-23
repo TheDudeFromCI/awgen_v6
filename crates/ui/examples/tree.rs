@@ -14,20 +14,18 @@ fn main() {
 }
 
 fn setup(asset_server: Res<AssetServer>, mut commands: Commands) {
+    commands.spawn(Camera2d);
     commands.spawn((
-        Camera2d,
-        (
-            ScreenAnchor::Center,
-            tree_view(TreeBuilder {
-                node: Node {
-                    width: px(250.0),
-                    height: px(500.0),
-                    ..default()
-                },
-                root_elements: build_tree(),
-                theme: theme::heath_theme(&asset_server),
-            }),
-        ),
+        ScreenAnchor::Center,
+        tree_view(TreeBuilder {
+            node: Node {
+                width: px(250.0),
+                height: px(500.0),
+                ..default()
+            },
+            root_elements: build_tree(),
+            theme: theme::heath_theme(&asset_server),
+        }),
     ));
 }
 
