@@ -4,7 +4,7 @@ use std::io::{Read, Write};
 
 use bevy::asset::io::Reader;
 use bevy::asset::{AssetLoader, AsyncReadExt, LoadContext, RenderAssetUsages};
-use bevy::image::ImageSampler;
+use bevy::image::{ImageSampler, IntoDynamicImageError};
 use bevy::prelude::*;
 use bevy::render::render_resource::{
     Extent3d,
@@ -14,11 +14,14 @@ use bevy::render::render_resource::{
     TextureFormat,
     TextureUsages,
 };
+use bevy::tasks::{AsyncComputeTaskPool, Task};
 use flate2::Compression;
 use flate2::read::ZlibDecoder;
 use flate2::write::ZlibEncoder;
+use image::EncodableLayout;
+use image::imageops::FilterType;
 
-use crate::loaders::{AssetDataError, AwgenAsset, ByteWriter};
+use crate::loaders::{AssetDataError, AwgenAsset, ByteWriter, ImagePreviewData};
 
 /// The Awgen image asset type name.
 pub const AWGEN_IMAGE_TYPE: &str = "awgen_image";
@@ -68,6 +71,36 @@ impl AwgenAsset for Image {
         let writer = encoder.finish()?;
         Ok(writer.data)
     }
+
+    fn generate_preview(&self) -> Task<Result<ImagePreviewData, AssetDataError>> {
+        let image = self.clone();
+        let pool = AsyncComputeTaskPool::get();
+        pool.spawn(async move {
+            let mut image = match image.try_into_dynamic() {
+                Ok(img) => img,
+                Err(IntoDynamicImageError::UninitializedImage) => {
+                    return Err(AssetDataError(String::from(
+                        "Uninitialized image for preview generation",
+                    )));
+                }
+                Err(_) => {
+                    return Err(AssetDataError(String::from(
+                        "Unsupported image format for preview generation",
+                    )));
+                }
+            };
+
+            image = image.resize_to_fill(
+                ImagePreviewData::WIDTH as u32,
+                ImagePreviewData::HEIGHT as u32,
+                FilterType::Triangle,
+            );
+
+            let mut preview = ImagePreviewData::new();
+            preview[..].copy_from_slice(image.into_rgba8().as_bytes());
+            Ok(preview)
+        })
+    }
 }
 
 /// Awgen image asset loader.
@@ -84,9 +117,24 @@ impl AssetLoader for AwgenImageAssetLoader {
         _: &mut LoadContext<'_>,
     ) -> Result<Self::Asset, Self::Error> {
         let mut magic_number = [0u8; MAGIC_NUMBER.len()];
-        reader.read_exact(&mut magic_number).await?;
+        let byte_count = reader.read(&mut magic_number).await?;
 
-        if magic_number != MAGIC_NUMBER {
+        if byte_count == 0 {
+            warn!("Loaded image asset with zero bytes, creating default 4x4 transparent image");
+            return Ok(Image::new(
+                Extent3d {
+                    width: 4,
+                    height: 4,
+                    depth_or_array_layers: 1,
+                },
+                TextureDimension::D2,
+                vec![0u8; 4 * 4 * 4],
+                TextureFormat::Rgba8UnormSrgb,
+                RenderAssetUsages::RENDER_WORLD,
+            ));
+        }
+
+        if magic_number != MAGIC_NUMBER || byte_count != MAGIC_NUMBER.len() {
             return Err(AssetDataError(String::from("Invalid image format")));
         }
 
@@ -108,6 +156,14 @@ impl AssetLoader for AwgenImageAssetLoader {
 
         let mut uncompressed_data = Vec::new();
         decoder.read_to_end(&mut uncompressed_data)?;
+
+        debug!(
+            "Loaded image asset: {}x{} ({} mipmaps), {} bytes",
+            width,
+            height,
+            mipmaps,
+            uncompressed_data.len()
+        );
 
         Ok(Image {
             data: Some(uncompressed_data),

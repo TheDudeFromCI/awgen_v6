@@ -80,7 +80,7 @@ where
 
         match data {
             Ok(Some(data)) => Ok(VecReader::new(data)),
-            Ok(None) => Err(AssetReaderError::NotFound(path.to_path_buf())),
+            Ok(None) => Ok(VecReader::new(Vec::new())),
             Err(e) => Err(e.into()),
         }
     }

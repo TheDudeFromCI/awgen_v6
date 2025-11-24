@@ -426,19 +426,11 @@ impl<Src: AssetDatabaseName> AssetDatabase<Src> {
 
         while let sqlite::State::Row = statement.next()? {}
 
-        if preview.is_some() {
-            self.send_event(AssetSourceEvent::ModifiedAsset(path_buf(
-                asset_id,
-                true,
-                Image::type_name(),
-            )));
-        } else {
-            self.send_event(AssetSourceEvent::RemovedAsset(path_buf(
-                asset_id,
-                true,
-                Image::type_name(),
-            )));
-        }
+        self.send_event(AssetSourceEvent::ModifiedAsset(path_buf(
+            asset_id,
+            true,
+            Image::type_name(),
+        )));
 
         Ok(())
     }

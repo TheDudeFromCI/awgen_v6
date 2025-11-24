@@ -9,8 +9,9 @@ use std::path::PathBuf;
 use bevy::asset::io::{AssetSource, AssetSourceId};
 use bevy::prelude::*;
 
-use crate::connection::AssetDatabase;
-use crate::prelude::AssetDatabaseName;
+use crate::connection::{AssetDatabase, AssetDatabaseName};
+use crate::loaders::AwgenImageAssetLoader;
+use crate::param::AssetDatabaseTasks;
 use crate::source::{AwgenDbSource, AwgenDbWatcher};
 
 pub mod connection;
@@ -19,6 +20,7 @@ pub mod module;
 pub mod param;
 pub mod record;
 pub mod source;
+mod systems;
 
 /// Prelude module for easy importing of commonly used items.
 pub mod prelude {
@@ -34,8 +36,16 @@ pub mod prelude {
 pub struct AwgenAssetPlugin;
 impl Plugin for AwgenAssetPlugin {
     fn build(&self, app_: &mut App) {
-        app_.register_asset_loader(loaders::AwgenImageAssetLoader);
+        app_.register_asset_loader(AwgenImageAssetLoader)
+            .init_resource::<AssetDatabaseTasks>();
     }
+}
+
+/// The systems provided by the Awgen asset database plugin.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, SystemSet)]
+pub enum AwgenAssetSystems {
+    /// System to poll various background tasks.
+    TaskPolling,
 }
 
 /// Extension trait for registering the Awgen asset database sources.
@@ -59,14 +69,19 @@ impl AwgenAssetPluginExt for App {
         });
         let watcher = database.clone();
 
-        self.insert_resource(database).register_asset_source(
-            AssetSourceId::Name(N::database_name().into()),
-            AssetSource::build()
-                .with_reader(move || reader.clone())
-                .with_watcher(move |sender| {
-                    watcher.add_watcher(sender);
-                    Some(Box::new(AwgenDbWatcher))
-                }),
-        )
+        self.insert_resource(database)
+            .register_asset_source(
+                AssetSourceId::Name(N::database_name().into()),
+                AssetSource::build()
+                    .with_reader(move || reader.clone())
+                    .with_watcher(move |sender| {
+                        watcher.add_watcher(sender);
+                        Some(Box::new(AwgenDbWatcher))
+                    }),
+            )
+            .add_systems(
+                Update,
+                systems::update_previews::<N>.in_set(AwgenAssetSystems::TaskPolling),
+            )
     }
 }

@@ -3,10 +3,13 @@
 use std::io::Write;
 
 use bevy::prelude::*;
+use bevy::tasks::Task;
 
 mod image;
+mod preview;
 
 pub use image::*;
+pub use preview::*;
 
 /// An asset that is supported by the Awgen asset management system.
 pub trait AwgenAsset: Asset + Sized {
@@ -19,6 +22,12 @@ pub trait AwgenAsset: Asset + Sized {
     /// Converts this asset into a byte vector for storage in the Awgen asset
     /// database.
     fn save(&self) -> Result<Vec<u8>, AssetDataError>;
+
+    /// Spawns a task that generates a preview image of this asset for asset
+    /// thumbnails.
+    ///
+    /// A preview image should be a 128x128 RGBA image, with bilinear sampling.
+    fn generate_preview(&self) -> Task<Result<ImagePreviewData, AssetDataError>>;
 }
 
 /// Error type for Awgen asset processing.
