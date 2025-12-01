@@ -153,6 +153,9 @@ pub enum ScreenAnchor {
 
     /// Bottom right corner of the screen.
     BottomRight,
+
+    /// Fill the entire screen.
+    Fullscreen,
 }
 
 impl ScreenAnchor {
@@ -225,6 +228,12 @@ impl ScreenAnchor {
             }
             ScreenAnchor::BottomRight => {
                 node.bottom = Val::Px(0.0);
+                node.right = Val::Px(0.0);
+            }
+            ScreenAnchor::Fullscreen => {
+                node.top = Val::Px(0.0);
+                node.bottom = Val::Px(0.0);
+                node.left = Val::Px(0.0);
                 node.right = Val::Px(0.0);
             }
         }

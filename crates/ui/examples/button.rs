@@ -1,9 +1,9 @@
 //! This example shows the dropdown menu component.
 
+use awgen_ui::QUIVER_FONT;
 use awgen_ui::prelude::*;
+use awgen_ui::themes::hearth_theme;
 use bevy::prelude::*;
-
-mod theme;
 
 fn main() {
     App::new()
@@ -20,7 +20,7 @@ fn setup(asset_server: Res<AssetServer>, mut commands: Commands) {
         button(ButtonBuilder {
             node: Node::default(),
             content: ButtonContent::text("Click Me"),
-            theme: theme::heath_theme(&asset_server),
+            theme: hearth_theme(asset_server.load(QUIVER_FONT)),
         }),
         observe(|_: On<Activate>| {
             info!("Button clicked!");

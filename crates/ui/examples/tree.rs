@@ -1,9 +1,9 @@
 //! This example shows the tree widget in action.
 
+use awgen_ui::QUIVER_FONT;
 use awgen_ui::prelude::*;
+use awgen_ui::themes::hearth_theme;
 use bevy::prelude::*;
-
-mod theme;
 
 fn main() {
     App::new()
@@ -24,7 +24,7 @@ fn setup(asset_server: Res<AssetServer>, mut commands: Commands) {
                 ..default()
             },
             root_elements: build_tree(),
-            theme: theme::heath_theme(&asset_server),
+            theme: hearth_theme(asset_server.load(QUIVER_FONT)),
         }),
     ));
 }

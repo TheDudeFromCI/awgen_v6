@@ -1,10 +1,11 @@
-//! This module provides the hearth theme constant.
+//! This module implements various UI themes.
 
-use awgen_ui::prelude::*;
 use bevy::prelude::*;
 
-/// Creates a new instance of the hearth theme.
-pub fn heath_theme(asset_server: &Res<AssetServer>) -> UiTheme {
+use crate::theme::{ColorTheme, ContainerTheme, FontTheme, InteractiveTheme, UiTheme};
+
+/// Returns the `hearth` UI theme.
+pub fn hearth_theme(font: Handle<Font>) -> UiTheme {
     UiTheme {
         outer_window: ContainerTheme {
             background_color: Color::srgb_u8(213, 169, 110),
@@ -62,7 +63,7 @@ pub fn heath_theme(asset_server: &Res<AssetServer>) -> UiTheme {
         },
         icon_size: 32.0,
         text: FontTheme {
-            font: asset_server.load("fonts/pixel_arial.ttf"),
+            font,
             font_size: 16.0,
             color: ColorTheme {
                 default: Color::srgb_u8(97, 74, 49),
@@ -73,6 +74,3 @@ pub fn heath_theme(asset_server: &Res<AssetServer>) -> UiTheme {
         },
     }
 }
-
-#[allow(dead_code)]
-fn main() {}

@@ -13,8 +13,13 @@ pub mod interaction;
 pub mod menus;
 pub mod scroll;
 pub mod theme;
+pub mod themes;
 pub mod util;
 pub mod widgets;
+
+/// The path to the default Awgen UI font: "Quiver".
+#[cfg(feature = "editor")]
+pub const QUIVER_FONT: &str = "embedded://awgen_ui/fonts/quiver.ttf";
 
 /// A prelude module for easy importing of common types.
 pub mod prelude {
@@ -42,5 +47,12 @@ impl Plugin for AwgenUiPlugin {
             scroll::ScrollPlugin,
             color::ColorPlugin,
         ));
+
+        #[cfg(feature = "editor")]
+        {
+            use bevy::asset::embedded_asset;
+
+            embedded_asset!(app_, "crates/ui/src", "fonts/quiver.ttf");
+        }
     }
 }
