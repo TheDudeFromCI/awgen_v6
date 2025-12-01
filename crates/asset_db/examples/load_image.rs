@@ -1,7 +1,7 @@
 //! This example demonstrates how to load an image asset using the Awgen asset
 //! management system.
 
-use awgen_assets::prelude::*;
+use awgen_asset_db::prelude::*;
 use bevy::asset::LoadState;
 use bevy::prelude::*;
 
