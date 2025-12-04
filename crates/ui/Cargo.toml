@@ -7,6 +7,7 @@ authors = ["TheDudeFromCI"]
 
 [dependencies]
 bevy = { version = "0.17", features = ["experimental_bevy_ui_widgets"] }
+thiserror = "2"
 
 [features]
 editor = []

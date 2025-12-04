@@ -19,6 +19,7 @@
     "imageops",
     "newtypes",
     "Occluder",
+    "reborrow",
     "renderable",
     "rustyscript",
     "smol",

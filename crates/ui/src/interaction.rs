@@ -27,20 +27,37 @@ impl Plugin for InteractionPlugin {
 ///
 /// Adding a [`Propagate(InteractionReceiver)`] component to a parent entity
 /// will forward the interaction state to all descendants.
-#[derive(Debug, Default, Component, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Component, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum InteractionReceiver {
     /// The default state.
-    #[default]
-    Default,
+    Default(bool),
 
     /// The widget is being hovered over.
-    Hovered,
+    Hovered(bool),
 
     /// The widget is being pressed.
-    Pressed,
+    Pressed(bool),
 
     /// The widget is disabled.
-    Disable,
+    Disable(bool),
+}
+
+impl InteractionReceiver {
+    /// Returns true if the interaction state is checked/selected.
+    pub fn is_checked(&self) -> bool {
+        match self {
+            InteractionReceiver::Default(checked)
+            | InteractionReceiver::Hovered(checked)
+            | InteractionReceiver::Pressed(checked)
+            | InteractionReceiver::Disable(checked) => *checked,
+        }
+    }
+}
+
+impl Default for InteractionReceiver {
+    fn default() -> Self {
+        InteractionReceiver::Default(false)
+    }
 }
 
 /// A component that listens for user interaction and forwards that too all
@@ -49,7 +66,7 @@ pub enum InteractionReceiver {
 /// Adding this component to an entity will automatically add the
 /// [`InteractionReceiver`] component to it as well.
 #[derive(Debug, Default, Component)]
-#[require(Hovered, Propagate<InteractionReceiver> = Propagate(InteractionReceiver::Default))]
+#[require(Hovered, Propagate<InteractionReceiver> = Propagate(InteractionReceiver::Default(false)))]
 pub struct InteractionSender;
 
 /// System that updates and forwards interaction events to receivers based on
@@ -76,12 +93,15 @@ fn update_interaction<E, A>(
 
     let pressed = pressed && !(E::is::<Remove>() && A::is::<Pressed>());
     let disabled = disabled && !(E::is::<Remove>() && A::is::<InteractionDisabled>());
+    let checked = maybe_interact
+        .as_ref()
+        .is_some_and(|interact| interact.is_checked());
 
     let state = match (disabled, hovered.0, pressed) {
-        (true, _, _) => InteractionReceiver::Disable,
-        (false, _, true) => InteractionReceiver::Pressed,
-        (false, true, false) => InteractionReceiver::Hovered,
-        (false, false, false) => InteractionReceiver::Default,
+        (true, _, _) => InteractionReceiver::Disable(checked),
+        (false, _, true) => InteractionReceiver::Pressed(checked),
+        (false, true, false) => InteractionReceiver::Hovered(checked),
+        (false, false, false) => InteractionReceiver::Default(checked),
     };
 
     match (maybe_propagate, maybe_interact) {

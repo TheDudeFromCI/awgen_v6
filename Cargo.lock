@@ -598,7 +598,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "awgen_assets"
+name = "awgen_asset_db"
 version = "0.1.0"
 dependencies = [
  "bevy",
@@ -613,10 +613,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "awgen_asset_explorer"
+version = "0.1.0"
+dependencies = [
+ "awgen_asset_db",
+ "awgen_ui",
+ "bevy",
+ "clap",
+]
+
+[[package]]
 name = "awgen_ui"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "thiserror 2.0.17",
 ]
 
 [[package]]

@@ -1,3 +1,8 @@
 [workspace]
 resolver = "2"
-members = ["crates/awgen", "crates/ui", "crates/asset_db"]
+members = [
+  "crates/awgen",
+  "crates/ui",
+  "crates/asset_db",
+  "tools/asset_explorer",
+]

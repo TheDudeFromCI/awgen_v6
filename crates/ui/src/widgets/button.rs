@@ -56,14 +56,14 @@ pub fn button(builder: ButtonBuilder) -> impl Bundle {
     (
         Button,
         Node {
-            border: UiRect::all(px(builder.theme.button.border_thickness)),
-            padding: UiRect::all(px(builder.theme.button.padding)),
+            border: UiRect::all(px(builder.theme.button.container.border_thickness)),
+            padding: builder.theme.button.container.padding,
             ..builder.node
         },
-        BorderRadius::all(px(builder.theme.button.border_radius)),
-        InteractiveColor::<BackgroundColor>::from(&builder.theme.button.background_color),
+        BorderRadius::all(px(builder.theme.button.container.border_radius)),
+        InteractiveColor::<BackgroundColor>::from(&builder.theme.button.container.background_color),
         InsetBorder::default(),
-        InteractiveColor::<BorderColor>::from(&builder.theme.button.border_color),
+        InteractiveColor::<BorderColor>::from(&builder.theme.button.container.border_color),
         InteractionSender,
         Children::spawn(SpawnWith(move |parent: &mut RelatedSpawner<ChildOf>| {
             match builder.content {
@@ -86,12 +86,12 @@ pub fn button(builder: ButtonBuilder) -> impl Bundle {
 fn icon(icon: Handle<Image>, theme: &UiTheme) -> impl Bundle {
     (
         Node {
-            width: px(theme.icon_size),
-            height: px(theme.icon_size),
+            width: px(theme.button.container.icon_size),
+            height: px(theme.button.container.icon_size),
             ..default()
         },
         ImageNode::new(icon.clone()),
-        InteractiveColor::<ImageNode>::from(&theme.icon_color),
+        InteractiveColor::<ImageNode>::from(&theme.button.container.icon_color),
     )
 }
 
@@ -105,11 +105,11 @@ fn text(text: String, theme: &UiTheme) -> impl Bundle {
         children![(
             Text::new(text),
             TextFont {
-                font: theme.text.font.clone(),
-                font_size: theme.text.font_size,
+                font: theme.button.container.text.font.clone(),
+                font_size: theme.button.container.text.font_size,
                 ..default()
             },
-            InteractiveColor::<TextColor>::from(&theme.text.color),
+            InteractiveColor::<TextColor>::from(&theme.button.container.text.color),
         )],
     )
 }

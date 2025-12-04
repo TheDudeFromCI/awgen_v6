@@ -1,0 +1,12 @@
+[package]
+name = "awgen_asset_explorer"
+description = "An asset explorer tool for Awgen."
+version = "0.1.0"
+edition = "2021"
+authors = ["TheDudeFromCI"]
+
+[dependencies]
+bevy = "0.17"
+awgen_asset_db = { path = "../../crates/asset_db" }
+awgen_ui = { path = "../../crates/ui", features = ["editor"] }
+clap = { version = "4.5.40", features = ["derive"] }

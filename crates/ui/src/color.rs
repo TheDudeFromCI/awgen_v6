@@ -91,8 +91,29 @@ where
     /// The color when the entity is disabled.
     pub disable: Color,
 
+    /// The color when checked/selected, but not hovered or pressed.
+    pub checked: Color,
+
     /// Marker.
     pub _marker: PhantomData<C>,
+}
+
+impl<C> InteractiveColor<C>
+where
+    C: Component<Mutability = Mutable> + Colorable,
+{
+    /// Creates a new interactive color theme with all states set to the given
+    /// color.
+    pub fn all(color: Color) -> Self {
+        Self {
+            default: color,
+            hovered: color,
+            pressed: color,
+            disable: color,
+            checked: color,
+            _marker: PhantomData,
+        }
+    }
 }
 
 impl<C> From<&ColorTheme> for InteractiveColor<C>
@@ -100,13 +121,39 @@ where
     C: Component<Mutability = Mutable> + Colorable,
 {
     fn from(theme: &ColorTheme) -> Self {
-        InteractiveColor {
-            default: theme.default,
-            hovered: theme.hovered,
-            pressed: theme.pressed,
-            disable: theme.disable,
-            _marker: PhantomData,
+        match theme {
+            ColorTheme::Interactive {
+                default,
+                hovered,
+                pressed,
+                disable,
+                checked,
+            } => Self {
+                default: *default,
+                hovered: *hovered,
+                pressed: *pressed,
+                disable: *disable,
+                checked: *checked,
+                _marker: PhantomData,
+            },
+            ColorTheme::Fixed(color) => Self {
+                default: *color,
+                hovered: *color,
+                pressed: *color,
+                disable: *color,
+                checked: *color,
+                _marker: PhantomData,
+            },
         }
+    }
+}
+
+impl<C> Default for InteractiveColor<C>
+where
+    C: Component<Mutability = Mutable> + Colorable,
+{
+    fn default() -> Self {
+        Self::all(Color::WHITE)
     }
 }
 
@@ -232,10 +279,11 @@ fn on_interaction_changed<C>(
 {
     for (mut colorable, maybe_smooth, color, interaction) in query.iter_mut() {
         let color = match interaction {
-            InteractionReceiver::Disable => color.disable,
-            InteractionReceiver::Pressed => color.pressed,
-            InteractionReceiver::Hovered => color.hovered,
-            InteractionReceiver::Default => color.default,
+            InteractionReceiver::Disable(_) => color.disable,
+            InteractionReceiver::Pressed(_) => color.pressed,
+            InteractionReceiver::Hovered(_) => color.hovered,
+            InteractionReceiver::Default(false) => color.default,
+            InteractionReceiver::Default(true) => color.checked,
         };
 
         match maybe_smooth {
@@ -263,15 +311,16 @@ fn on_press_inset_border(
 ) {
     for (mut border_color, interaction, inset, maybe_interactive) in query.iter_mut() {
         let base_color = match (maybe_interactive, interaction) {
-            (Some(interactive), InteractionReceiver::Default) => interactive.default,
-            (Some(interactive), InteractionReceiver::Hovered) => interactive.hovered,
-            (Some(interactive), InteractionReceiver::Pressed) => interactive.pressed,
-            (Some(interactive), InteractionReceiver::Disable) => interactive.disable,
+            (Some(interactive), InteractionReceiver::Default(false)) => interactive.default,
+            (Some(interactive), InteractionReceiver::Default(true)) => interactive.checked,
+            (Some(interactive), InteractionReceiver::Hovered(_)) => interactive.hovered,
+            (Some(interactive), InteractionReceiver::Pressed(_)) => interactive.pressed,
+            (Some(interactive), InteractionReceiver::Disable(_)) => interactive.disable,
             _ => inset.0,
         };
 
         match interaction {
-            InteractionReceiver::Pressed => {
+            InteractionReceiver::Pressed(_) => {
                 border_color.top = base_color.darker(INSET_STRENGTH);
                 border_color.left = base_color.darker(INSET_STRENGTH);
                 border_color.bottom = base_color.lighter(INSET_STRENGTH);
